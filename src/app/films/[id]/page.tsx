@@ -159,7 +159,7 @@ export default function FilmDetailPage() {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <section className="grid gap-6 lg:grid-cols-1">
           <Card className="rounded-lg border border-zinc-200 shadow-sm">
             <CardHeader>
               <CardTitle>Synopsis</CardTitle>
@@ -169,27 +169,6 @@ export default function FilmDetailPage() {
               <p className="whitespace-pre-line text-base leading-7 text-zinc-700">
                 {detail.synopsis || "Belum ada synopsis."}
               </p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-lg border border-zinc-200 shadow-sm">
-            <CardHeader>
-              <CardTitle>Images</CardTitle>
-              <CardDescription>Asset gambar dari detail film.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {detail.images.length === 0 ? (
-                <p className="text-sm text-zinc-600">Belum ada gambar.</p>
-              ) : null}
-              {detail.images.map((image) => (
-                <div
-                  aria-label={detail.title}
-                  className="aspect-video overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 bg-cover bg-center"
-                  key={image}
-                  role="img"
-                  style={{ backgroundImage: `url(${resolveImageUrl(image)})` }}
-                />
-              ))}
             </CardContent>
           </Card>
         </section>
