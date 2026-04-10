@@ -11,7 +11,7 @@ export function setApiContext(newContext: GetServerSidePropsContext) {
 }
 
 export const baseURL =
-  process.env.NEXT_PUBLIC_API_URL ??
+  process.env.NEXT_PUBLIC_API_URL ||
   (process.env.NEXT_PUBLIC_RUN_MODE === "production"
     ? process.env.NEXT_PUBLIC_API_URL_PROD
     : process.env.NEXT_PUBLIC_API_URL_DEV);
