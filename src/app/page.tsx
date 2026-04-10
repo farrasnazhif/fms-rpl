@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -186,7 +187,14 @@ export default function Home() {
                   <CardHeader>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <CardTitle className="text-xl">{film.title}</CardTitle>
+                        <CardTitle className="text-xl">
+                          <Link
+                            className="transition-colors hover:text-emerald-700"
+                            href={`/films/${film.id}`}
+                          >
+                            {film.title}
+                          </Link>
+                        </CardTitle>
                         <CardDescription>
                           Rilis {formatDate(film.release_date)}
                         </CardDescription>
@@ -215,6 +223,12 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
+                    <Link
+                      className="mt-4 inline-flex text-sm font-medium text-emerald-700 hover:text-emerald-800"
+                      href={`/films/${film.id}`}
+                    >
+                      Lihat detail
+                    </Link>
                   </CardContent>
                 </Card>
               ))}
