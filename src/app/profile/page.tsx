@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,6 +12,10 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  useUserInteractions,
+  VisibilityStatus,
+} from "@/hooks/use-user-interactions";
 import { useUserDetail } from "@/hooks/use-user-detail";
 
 function getInitials(value?: string) {
@@ -28,6 +33,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const { isAuthenticated, isLoadingUser, logout, user, userError } = useAuth();
   const userDetail = useUserDetail(user?.id);
+  const interactions = useUserInteractions();
+  const [visibilityMessage, setVisibilityMessage] = useState("");
   const username = user?.username ?? "Memuat profil";
   const displayName = user?.display_name?.trim() || username;
   const bio = user?.bio?.trim() || "Belum ada bio untuk akun ini.";
@@ -37,6 +44,33 @@ export default function ProfilePage() {
   function handleLogout() {
     logout();
     router.push("/login");
+  }
+
+  async function handleVisibilityChange(
+    filmListId: string | undefined,
+    visibility: VisibilityStatus,
+  ) {
+    setVisibilityMessage("");
+
+    if (!filmListId) {
+      setVisibilityMessage("ID film list tidak tersedia dari API.");
+      return;
+    }
+
+    try {
+      await interactions.updateFilmListVisibility.mutateAsync({
+        id: filmListId,
+        visibility,
+        userId: user?.id,
+      });
+      setVisibilityMessage("Visibilitas daftar tontonan berhasil diubah.");
+    } catch (error) {
+      setVisibilityMessage(
+        error instanceof Error
+          ? error.message
+          : "Visibilitas daftar tontonan gagal diubah.",
+      );
+    }
   }
 
   if (!isAuthenticated) {
@@ -167,7 +201,7 @@ export default function ProfilePage() {
                     {filmLists.map((film) => (
                       <article
                         className="rounded-lg border border-zinc-200 bg-white p-4"
-                        key={film.id}
+                        key={`${film.id ?? film.film_title}-${film.list_status}`}
                       >
                         <p className="text-base font-semibold text-zinc-950">
                           {film.film_title}
@@ -175,9 +209,39 @@ export default function ProfilePage() {
                         <p className="mt-2 w-fit rounded-lg bg-zinc-100 px-2 py-1 text-xs font-medium uppercase text-zinc-600">
                           {film.list_status}
                         </p>
+                        <div className="mt-4 space-y-2">
+                          <label
+                            className="text-sm font-medium text-zinc-800"
+                            htmlFor={`visibility-${film.id ?? film.film_title}`}
+                          >
+                            Visibilitas
+                          </label>
+                          <select
+                            className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                            defaultValue={film.visibility ?? "public"}
+                            disabled={
+                              interactions.updateFilmListVisibility.isPending
+                            }
+                            id={`visibility-${film.id ?? film.film_title}`}
+                            onChange={(event) =>
+                              handleVisibilityChange(
+                                film.id,
+                                event.target.value as VisibilityStatus,
+                              )
+                            }
+                          >
+                            <option value="public">Public</option>
+                            <option value="private">Private</option>
+                          </select>
+                        </div>
                       </article>
                     ))}
                   </div>
+                ) : null}
+                {visibilityMessage ? (
+                  <p className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700">
+                    {visibilityMessage}
+                  </p>
                 ) : null}
               </section>
 

@@ -8,9 +8,10 @@ import { getToken, removeToken, setToken } from "@/lib/cookies";
 export type UserRole = "User" | "Admin";
 
 export type UserFilmList = {
-  id: string;
+  id?: string;
   film_title: string;
   list_status: string;
+  visibility?: "public" | "private" | string;
 };
 
 export type UserReview = {
