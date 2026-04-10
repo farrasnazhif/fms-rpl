@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
+import { useUserDetail } from "@/hooks/use-user-detail";
 
 function getInitials(value?: string) {
   const source = value?.trim() ? value : "FMS";
@@ -27,9 +28,12 @@ function getInitials(value?: string) {
 export default function ProfilePage() {
   const router = useRouter();
   const { isAuthenticated, isLoadingUser, logout, user, userError } = useAuth();
+  const userDetail = useUserDetail(user?.id);
   const username = user?.username ?? "Memuat profil";
   const displayName = user?.display_name?.trim() || username;
   const bio = user?.bio?.trim() || "Belum ada bio untuk akun ini.";
+  const filmLists = userDetail.data?.film_lists ?? [];
+  const reviews = userDetail.data?.reviews ?? [];
 
   function handleLogout() {
     logout();
@@ -127,6 +131,11 @@ export default function ProfilePage() {
                   Token tidak valid atau sesi berakhir. Silakan login ulang.
                 </p>
               ) : null}
+              {userDetail.error ? (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  Detail film dan review gagal dimuat.
+                </p>
+              ) : null}
 
               <div>
                 <h3 className="text-lg font-semibold text-zinc-950">
@@ -145,6 +154,89 @@ export default function ProfilePage() {
                   {bio}
                 </p>
               </article>
+
+              <Separator />
+
+              <section className="space-y-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-zinc-950">
+                    Film List
+                  </h3>
+                  <p className="mt-1 text-sm text-zinc-600">
+                    Daftar film dari detail user.
+                  </p>
+                </div>
+                {userDetail.isLoading ? (
+                  <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
+                    Memuat film list...
+                  </p>
+                ) : null}
+                {!userDetail.isLoading && filmLists.length === 0 ? (
+                  <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
+                    Belum ada film di list.
+                  </p>
+                ) : null}
+                {filmLists.length > 0 ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {filmLists.map((film) => (
+                      <article
+                        className="rounded-lg border border-zinc-200 bg-white p-4"
+                        key={film.id}
+                      >
+                        <p className="text-base font-semibold text-zinc-950">
+                          {film.film_title}
+                        </p>
+                        <p className="mt-2 w-fit rounded-lg bg-zinc-100 px-2 py-1 text-xs font-medium uppercase text-zinc-600">
+                          {film.list_status}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+
+              <section className="space-y-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-zinc-950">
+                    Reviews
+                  </h3>
+                  <p className="mt-1 text-sm text-zinc-600">
+                    Ulasan yang pernah dibuat user.
+                  </p>
+                </div>
+                {userDetail.isLoading ? (
+                  <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
+                    Memuat reviews...
+                  </p>
+                ) : null}
+                {!userDetail.isLoading && reviews.length === 0 ? (
+                  <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
+                    Belum ada review.
+                  </p>
+                ) : null}
+                {reviews.length > 0 ? (
+                  <div className="space-y-3">
+                    {reviews.map((review) => (
+                      <article
+                        className="rounded-lg border border-zinc-200 bg-white p-4"
+                        key={`${review.film}-${review.rating}-${review.comment}`}
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-base font-semibold text-zinc-950">
+                            {review.film}
+                          </p>
+                          <p className="w-fit rounded-lg bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+                            Rating {review.rating}/10
+                          </p>
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-zinc-700">
+                          {review.comment}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
             </div>
 
             <aside className="border-t border-zinc-200 bg-zinc-50 p-6 lg:border-t-0 lg:border-l">
