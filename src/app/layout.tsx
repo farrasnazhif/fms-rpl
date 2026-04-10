@@ -14,9 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Next Starter Kit",
-  description:
-    "Starter landing page with shadcn/ui sandbox, Husky, and React Query.",
+  title: "FMS",
+  description: "Film Management System authentication.",
 };
 
 export default function RootLayout({

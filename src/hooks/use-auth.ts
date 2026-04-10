@@ -62,9 +62,9 @@ function extractUser(payload: AuthPayload): AuthUser | undefined {
   return undefined;
 }
 
-async function fetchMe() {
+async function fetchMe(): Promise<AuthUser> {
   const response = await api.get<AuthPayload>("/auth/me");
-  return extractUser(response.data) ?? response.data;
+  return (extractUser(response.data) ?? response.data) as AuthUser;
 }
 
 export function useAuth() {
