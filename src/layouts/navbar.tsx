@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -21,17 +22,38 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, logout } = useAuth();
-  const links = isAuthenticated ? authenticatedLinks : publicLinks;
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   function handleLogout() {
     logout();
     router.push("/login");
   }
 
+  if (!mounted) {
+    return (
+      <header className="fixed inset-x-0 top-0 z-50 bg-white">
+        <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+          <div className="h-5 w-16 bg-zinc-200 rounded" />
+          <div className="flex gap-2">
+            <div className="h-8 w-16 bg-zinc-200 rounded" />
+            <div className="h-8 w-16 bg-zinc-200 rounded" />
+          </div>
+        </nav>
+      </header>
+    );
+  }
+
+  const links = isAuthenticated ? authenticatedLinks : publicLinks;
+
   return (
-    <header className="fixed inset-x-0 top-0 z-50 bg-white ">
+    <header className="fixed inset-x-0 top-0 z-50 bg-white">
       <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-        {/* logo */}
         <Link
           href="/"
           className="text-xl font-semibold tracking-tight text-black"
@@ -39,7 +61,6 @@ export function Navbar() {
           FMS
         </Link>
 
-        {/* nav */}
         <div className="flex items-center gap-2">
           {links.map((link) => (
             <Link
@@ -54,12 +75,12 @@ export function Navbar() {
             </Link>
           ))}
 
-          {/* logout */}
           {isAuthenticated && (
             <Button
               onClick={handleLogout}
               size="sm"
-              className="ml-2 bg-white/10 text-white hover:bg-white/20 border border-white/20"
+              variant="outline"
+              className="ml-2"
             >
               Logout
             </Button>
