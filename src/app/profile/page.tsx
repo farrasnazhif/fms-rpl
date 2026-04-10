@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,17 +50,12 @@ export default function ProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button
-              className="w-full"
-              nativeButton={false}
-              render={<Link href="/login" />}
-            >
+            <Button className="w-full" onClick={() => router.push("/login")}>
               Login
             </Button>
             <Button
               className="w-full"
-              nativeButton={false}
-              render={<Link href="/register" />}
+              onClick={() => router.push("/register")}
               variant="outline"
             >
               Register
@@ -81,14 +75,6 @@ export default function ProfilePage() {
             <h1 className="mt-1 text-3xl font-semibold tracking-tight text-zinc-950">
               Profil
             </h1>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button nativeButton={false} render={<Link href="/" />}>
-              Home
-            </Button>
-            <Button onClick={handleLogout} variant="outline">
-              Logout
-            </Button>
           </div>
         </header>
 

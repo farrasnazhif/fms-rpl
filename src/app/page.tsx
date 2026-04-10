@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -51,33 +49,6 @@ export default function Home() {
               Lihat daftar film, status penayangan, jumlah episode, tanggal
               rilis, dan rating rata-rata dari API FMS.
             </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              size="lg"
-              nativeButton={false}
-              render={<Link href="/login" />}
-            >
-              Login
-            </Button>
-            <Button
-              className="bg-white text-zinc-950 hover:bg-zinc-100"
-              size="lg"
-              nativeButton={false}
-              render={<Link href="/register" />}
-              variant="secondary"
-            >
-              Register
-            </Button>
-            <Button
-              className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
-              size="lg"
-              nativeButton={false}
-              render={<Link href="/profile" />}
-              variant="outline"
-            >
-              Profile
-            </Button>
           </div>
         </div>
       </section>
