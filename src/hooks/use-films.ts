@@ -21,10 +21,25 @@ export type FilmGenre = {
   name: string;
 };
 
+export type FilmDetailReview = {
+  id: string;
+  user_id: string;
+  rating: number;
+  comment: string;
+  likes: number;
+  dislikes: number;
+};
+
 export type FilmDetail = Film & {
   synopsis: string;
   images: string[];
   genres: FilmGenre[];
+  reviews: FilmDetailReview[];
+};
+
+type FilmDetailResponse = Omit<FilmDetail, "images" | "reviews"> & {
+  images: string[] | null;
+  reviews?: FilmDetailReview[] | null;
 };
 
 export type FilmMeta = {
@@ -46,7 +61,7 @@ type FilmsPayload = {
 type FilmDetailPayload = {
   success: boolean;
   message: string;
-  data: FilmDetail;
+  data: FilmDetailResponse;
 };
 
 export const filmKeys = {
@@ -61,7 +76,13 @@ async function fetchFilms(): Promise<FilmsPayload> {
 
 async function fetchFilmDetail(id: string): Promise<FilmDetail> {
   const response = await api.get<FilmDetailPayload>(`/films/${id}`);
-  return response.data.data;
+  const detail = response.data.data;
+
+  return {
+    ...detail,
+    images: detail.images ?? [],
+    reviews: detail.reviews ?? [],
+  };
 }
 
 export function useFilms() {

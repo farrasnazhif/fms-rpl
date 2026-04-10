@@ -75,7 +75,7 @@ export default function FilmDetailPage() {
   }
 
   const detail = film.data;
-  const heroImage = detail.images[0];
+  const heroImage = detail.images.at(0);
 
   return (
     <main className="min-h-screen bg-zinc-50 px-6 py-10">
@@ -193,6 +193,36 @@ export default function FilmDetailPage() {
             </CardContent>
           </Card>
         </section>
+
+        <Card className="rounded-lg border border-zinc-200 shadow-sm">
+          <CardHeader>
+            <CardTitle>Reviews</CardTitle>
+            <CardDescription>Ulasan dari user untuk film ini.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {detail.reviews.length === 0 ? (
+              <p className="text-sm text-zinc-600">Belum ada review.</p>
+            ) : null}
+            {detail.reviews.map((review) => (
+              <article
+                className="rounded-lg border border-zinc-200 bg-zinc-50 p-4"
+                key={review.id}
+              >
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-medium text-zinc-950">
+                    Rating {review.rating}/10
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    {review.likes} likes, {review.dislikes} dislikes
+                  </p>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-zinc-700">
+                  {review.comment}
+                </p>
+              </article>
+            ))}
+          </CardContent>
+        </Card>
 
         <Separator />
       </div>
