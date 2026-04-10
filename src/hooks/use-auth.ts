@@ -1,25 +1,53 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import api from "@/lib/api";
 import { getToken, removeToken, setToken } from "@/lib/cookies";
 
 export type UserRole = "User" | "Admin";
 
+export type UserFilmList = {
+  id: string;
+  film_title: string;
+  list_status: string;
+};
+
+export type UserReview = {
+  film: string;
+  rating: number;
+  comment: string;
+};
+
 export type AuthUser = {
-  id?: string | number;
-  name?: string;
-  email?: string;
+  id: string;
+  username: string;
+  email: string;
+  display_name?: string;
+  bio?: string;
   role?: UserRole | string;
-  [key: string]: unknown;
+  film_lists?: UserFilmList[];
+  reviews?: UserReview[];
+};
+
+type LegacyAuthUser = AuthUser & {
+  name?: string;
 };
 
 type AuthPayload = {
+  success?: boolean;
+  message?: string;
   token?: string;
   access_token?: string;
   accessToken?: string;
-  user?: AuthUser;
-  data?: AuthPayload | AuthUser;
+  user?: LegacyAuthUser;
+  personal_info?: LegacyAuthUser;
+  data?:
+    | AuthPayload
+    | LegacyAuthUser
+    | {
+        personal_info?: LegacyAuthUser;
+      };
   [key: string]: unknown;
 };
 
@@ -44,19 +72,24 @@ function extractToken(payload: AuthPayload): string | undefined {
   if (payload.access_token) return payload.access_token;
   if (payload.accessToken) return payload.accessToken;
 
-  if (payload.data && "token" in payload.data) {
+  if (payload.data && typeof payload.data === "object") {
     return extractToken(payload.data as AuthPayload);
   }
 
   return undefined;
 }
 
-function extractUser(payload: AuthPayload): AuthUser | undefined {
+function extractUser(payload: AuthPayload): LegacyAuthUser | undefined {
   if (payload.user) return payload.user;
+  if (payload.personal_info) return payload.personal_info;
 
   if (payload.data) {
     if ("user" in payload.data) return extractUser(payload.data as AuthPayload);
-    return payload.data as AuthUser;
+    if ("personal_info" in payload.data) {
+      return payload.data.personal_info;
+    }
+
+    return payload.data as LegacyAuthUser;
   }
 
   return undefined;
@@ -64,16 +97,23 @@ function extractUser(payload: AuthPayload): AuthUser | undefined {
 
 async function fetchMe(): Promise<AuthUser> {
   const response = await api.get<AuthPayload>("/auth/me");
-  return (extractUser(response.data) ?? response.data) as AuthUser;
+  const user = extractUser(response.data);
+
+  if (!user) {
+    throw new Error("Data profil tidak ditemukan.");
+  }
+
+  return user;
 }
 
 export function useAuth() {
   const queryClient = useQueryClient();
+  const [token, setAuthToken] = useState(() => getToken());
 
   const me = useQuery({
     queryKey: authKeys.me,
     queryFn: fetchMe,
-    enabled: Boolean(getToken()),
+    enabled: Boolean(token),
   });
 
   const login = useMutation({
@@ -86,6 +126,7 @@ export function useAuth() {
       }
 
       setToken(token);
+      setAuthToken(token);
       return extractUser(response.data);
     },
     onSuccess: async () => {
@@ -100,6 +141,7 @@ export function useAuth() {
 
       if (token) {
         setToken(token);
+        setAuthToken(token);
       }
 
       return extractUser(response.data);
@@ -111,12 +153,13 @@ export function useAuth() {
 
   function logout() {
     removeToken();
+    setAuthToken(undefined);
     queryClient.removeQueries({ queryKey: authKeys.me });
   }
 
   return {
     user: me.data,
-    isAuthenticated: Boolean(getToken()),
+    isAuthenticated: Boolean(token),
     isLoadingUser: me.isLoading,
     userError: me.error,
     refetchUser: me.refetch,
