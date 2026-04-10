@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -8,6 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useFilms } from "@/hooks/use-films";
 
 const heroImage =
@@ -27,8 +30,28 @@ function formatDate(value: string) {
 
 export default function Home() {
   const films = useFilms();
-  const filmItems = films.data?.data ?? [];
+  const filmItems = useMemo(() => films.data?.data ?? [], [films.data?.data]);
   const meta = films.data?.meta?.[0];
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const debouncedSearch = useDebounce(search);
+  const statusOptions = useMemo(
+    () => Array.from(new Set(filmItems.map((film) => film.airing_status))),
+    [filmItems]
+  );
+  const filteredFilms = useMemo(() => {
+    const normalizedSearch = debouncedSearch.trim().toLowerCase();
+
+    return filmItems.filter((film) => {
+      const matchesTitle = normalizedSearch
+        ? film.title.toLowerCase().includes(normalizedSearch)
+        : true;
+      const matchesStatus =
+        status === "all" ? true : film.airing_status === status;
+
+      return matchesTitle && matchesStatus;
+    });
+  }, [debouncedSearch, filmItems, status]);
 
   return (
     <main className="min-h-screen bg-zinc-50">
@@ -72,6 +95,38 @@ export default function Home() {
             ) : null}
           </div>
 
+          <div className="grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 md:grid-cols-[1fr_220px]">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-800" htmlFor="film-search">
+                Cari film
+              </label>
+              <Input
+                id="film-search"
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Cari berdasarkan judul..."
+                value={search}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-800" htmlFor="film-status">
+                Status
+              </label>
+              <select
+                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                id="film-status"
+                onChange={(event) => setStatus(event.target.value)}
+                value={status}
+              >
+                <option value="all">Semua status</option>
+                {statusOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {formatStatus(item)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {films.isLoading ? (
             <div className="grid gap-4 md:grid-cols-2">
               {[1, 2, 3, 4].map((item) => (
@@ -107,9 +162,23 @@ export default function Home() {
             </Card>
           ) : null}
 
-          {filmItems.length > 0 ? (
+          {!films.isLoading &&
+          !films.error &&
+          filmItems.length > 0 &&
+          filteredFilms.length === 0 ? (
+            <Card className="rounded-lg">
+              <CardHeader>
+                <CardTitle>Film tidak ditemukan</CardTitle>
+                <CardDescription>
+                  Coba ubah kata kunci atau pilih status lain.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ) : null}
+
+          {filteredFilms.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
-              {filmItems.map((film) => (
+              {filteredFilms.map((film) => (
                 <Card
                   className="rounded-lg border border-zinc-200 shadow-sm"
                   key={film.id}
