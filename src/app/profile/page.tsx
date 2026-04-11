@@ -54,7 +54,7 @@ export default function ProfilePage() {
 
   return (
     <Layout withNavbar>
-      <main className="min-h-screen bg-zinc-50 px-6 py-20 flex justify-center items-center">
+      <main className="min-h-screen bg-zinc-50 px-6 py-24 flex justify-center items-center">
         {!isAuthenticated ? (
           <div className="relative flex items-center justify-center">
             <div className="relative w-full max-w-md">
