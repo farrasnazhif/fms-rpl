@@ -16,6 +16,7 @@ import { usePublicGenres, type Genre } from "@/hooks/use-genres";
 import { useFilms, fetchFilmDetail, filmKeys } from "@/hooks/use-films";
 import Layout from "@/layouts/Layout";
 import { resolveImageUrl } from "@/lib/utils";
+import Image from "next/image";
 
 const TAKE = 50;
 const PAGE_SIZE = 12;
@@ -224,13 +225,15 @@ export default function GenresPage() {
                     >
                       <Link href={`/films/${film.id}`}>
                         {film.images?.[0] ? (
-                          <img
+                          <Image
                             alt={film.title}
-                            className="h-40 w-full object-cover"
+                            className="h-108 w-full object-cover"
                             src={resolveImageUrl(film.images[0])}
+                            width={600}
+                            height={200}
                           />
                         ) : (
-                          <div className="flex h-40 w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
+                          <div className="flex h-108 w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
                             <span className="text-4xl font-bold text-white/20">
                               {film.title.charAt(0).toUpperCase()}
                             </span>
@@ -289,6 +292,12 @@ export default function GenresPage() {
                             </p>
                           </div>
                         </div>
+                        <Link
+                          className="mt-4 inline-flex text-sm font-medium text-red-700 hover:text-red-800"
+                          href={`/films/${film.id}`}
+                        >
+                          Lihat detail
+                        </Link>
                       </CardContent>
                     </Card>
                   ))}

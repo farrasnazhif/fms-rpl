@@ -232,13 +232,13 @@ export default function Home() {
                       {film.images?.[0] ? (
                         <Image
                           alt={film.title}
-                          className="h-48 w-full object-cover"
+                          className="w-full h-108 object-cover"
                           src={resolveImageUrl(film.images[0])}
-                          width={400}
-                          height={300}
+                          width={600}
+                          height={200}
                         />
                       ) : (
-                        <div className="flex h-48 w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
+                        <div className="flex h-108  w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
                           <span className="text-5xl font-bold text-white/20">
                             {film.title.charAt(0).toUpperCase()}
                           </span>
