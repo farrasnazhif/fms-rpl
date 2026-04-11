@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -21,30 +20,18 @@ import Image from "next/image";
 const TAKE = 50;
 const PAGE_SIZE = 12;
 
-function formatStatus(status: string) {
-  return status.replaceAll("_", " ");
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
 export default function GenresPage() {
   const genres = usePublicGenres();
   const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
   const [page, setPage] = useState(1);
 
-  // Step 1: fetch the film list (no genre filter — API doesn't support it)
+  // step 1: fetch the film list (no genre filter, since API doesn't support it)
   const allFilms = useFilms(
     { take: TAKE, page: 1 },
     { enabled: Boolean(selectedGenre) },
   );
 
-  // Step 2: fetch detail for every film in parallel to get their genres
+  // step 2: fetch detail for every film in parallel to get their genres
   const filmDetails = useQueries({
     queries: (allFilms.data?.data ?? []).map((film) => ({
       queryKey: filmKeys.detail(film.id),
@@ -53,7 +40,7 @@ export default function GenresPage() {
     })),
   });
 
-  // Step 3: filter client-side by the selected genre id
+  // step 3: filter client-side by the selected genre id
   const filteredFilms = useMemo(() => {
     if (!selectedGenre) return [];
     return filmDetails
@@ -217,90 +204,72 @@ export default function GenresPage() {
               ) : null}
 
               {!isLoading && paginatedFilms.length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {paginatedFilms.map((film) => (
-                    <Card
-                      className="overflow-hidden rounded-lg border border-zinc-200 shadow-sm"
-                      key={film.id}
-                    >
-                      <Link href={`/films/${film.id}`}>
-                        {film.images?.[0] ? (
-                          <Image
-                            alt={film.title}
-                            className="h-108 w-full object-cover"
-                            src={resolveImageUrl(film.images[0])}
-                            width={600}
-                            height={200}
-                          />
-                        ) : (
-                          <div className="flex h-108 w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
-                            <span className="text-4xl font-bold text-white/20">
-                              {film.title.charAt(0).toUpperCase()}
+                <div className="grid gap-5 md:grid-cols-3 lg:grid-cols-5">
+                  {paginatedFilms.map((film) => {
+                    const imageUrl = resolveImageUrl(film.images?.[0]);
+
+                    return (
+                      <Link
+                        key={film.id}
+                        href={`/films/${film.id}`}
+                        className="group block"
+                      >
+                        <div className="relative overflow-hidden rounded-xl bg-zinc-900 shadow-md transition duration-300 hover:scale-105 hover:shadow-2xl">
+                          {/* IMAGE */}
+                          {imageUrl ? (
+                            <div className="relative w-full aspect-[2/3]">
+                              <Image
+                                src={imageUrl}
+                                alt={film.title}
+                                fill
+                                className="object-cover transition duration-500 group-hover:scale-110"
+                              />
+
+                              {/* gradient */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                            </div>
+                          ) : (
+                            <div className="flex aspect-[2/3] items-center justify-center bg-zinc-800">
+                              <span className="text-white/30 text-4xl">
+                                {film.title[0]}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* GENRE CHIP */}
+                          <div className="absolute top-2 left-2">
+                            <span className="rounded bg-black/70 px-2 py-1 text-xs text-white backdrop-blur">
+                              {selectedGenre.name}
                             </span>
                           </div>
-                        )}
-                      </Link>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <CardTitle className="text-base leading-snug">
-                            <Link
-                              className="transition-colors hover:text-emerald-700"
-                              href={`/films/${film.id}`}
-                            >
+
+                          {/* INFO */}
+                          <div
+                            className="
+              absolute bottom-0 left-0 right-0 p-3
+              bg-gradient-to-t from-black/90 via-black/40 to-transparent
+
+              opacity-100 translate-y-0
+
+              md:translate-y-6 md:opacity-0
+              md:group-hover:translate-y-0 md:group-hover:opacity-100
+
+              transition duration-300
+            "
+                          >
+                            <p className="text-sm font-semibold text-white line-clamp-2">
                               {film.title}
-                            </Link>
-                          </CardTitle>
-                          <Badge className="shrink-0" variant="outline">
-                            {formatStatus(film.airing_status)}
-                          </Badge>
-                        </div>
-                        <CardDescription>
-                          Rilis {formatDate(film.release_date)}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="mb-2 flex flex-wrap gap-1">
-                          {film.genres.map((g) => (
-                            <Badge
-                              className={
-                                g.id === selectedGenre.id
-                                  ? "bg-emerald-100 text-emerald-800"
-                                  : ""
-                              }
-                              key={g.id}
-                              variant="outline"
-                            >
-                              {g.name}
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2">
-                            <p className="text-xs font-medium uppercase text-zinc-500">
-                              Episode
                             </p>
-                            <p className="mt-0.5 text-base font-semibold text-zinc-950">
-                              {film.total_episodes}
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2">
-                            <p className="text-xs font-medium uppercase text-zinc-500">
-                              Rating
-                            </p>
-                            <p className="mt-0.5 text-base font-semibold text-zinc-950">
-                              {film.average_rating}/10
-                            </p>
+
+                            <div className="mt-1 flex items-center justify-between text-xs text-zinc-300">
+                              <span>⭐ {film.average_rating}</span>
+                              <span>{film.total_episodes} eps</span>
+                            </div>
                           </div>
                         </div>
-                        <Link
-                          className="mt-4 inline-flex text-sm font-medium text-red-700 hover:text-red-800"
-                          href={`/films/${film.id}`}
-                        >
-                          Lihat detail
-                        </Link>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      </Link>
+                    );
+                  })}
                 </div>
               ) : null}
 

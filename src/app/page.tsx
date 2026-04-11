@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -25,20 +23,6 @@ const TAKE = 12;
 
 function formatStatus(status: string) {
   return status.replaceAll("_", " ");
-}
-
-function formatDate(value: string) {
-  if (!value) return "-";
-
-  const date = new Date(value);
-
-  if (isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(date);
 }
 
 export default function Home() {
@@ -222,77 +206,53 @@ export default function Home() {
             ) : null}
 
             {filteredFilms.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-3">
-                {filteredFilms.map((film) => (
-                  <Card
-                    className="overflow-hidden rounded-lg shadow-sm"
-                    key={film.id}
-                  >
-                    <Link href={`/films/${film.id}`}>
-                      {film.images?.[0] ? (
-                        <Image
-                          alt={film.title}
-                          className="w-full h-108 object-cover"
-                          src={resolveImageUrl(film.images[0])}
-                          width={600}
-                          height={200}
-                        />
-                      ) : (
-                        <div className="flex h-108  w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
-                          <span className="text-5xl font-bold text-white/20">
-                            {film.title.charAt(0).toUpperCase()}
-                          </span>
+              <div className="grid gap-6 md:grid-cols-4 lg:grid-cols-5">
+                {filteredFilms.map((film) => {
+                  const imageUrl = resolveImageUrl(film.images?.[0]);
+
+                  return (
+                    <Link
+                      key={film.id}
+                      href={`/films/${film.id}`}
+                      className="group block"
+                    >
+                      <div className="relative overflow-hidden rounded-xl bg-zinc-900 shadow-md transition duration-300 hover:scale-105 hover:shadow-2xl">
+                        {/* IMAGE */}
+                        {imageUrl ? (
+                          <div className="relative w-full aspect-[2/3]">
+                            <Image
+                              src={imageUrl}
+                              alt={film.title}
+                              fill
+                              className="object-cover transition duration-500 group-hover:scale-110"
+                            />
+
+                            {/* overlay gradient */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition" />
+                          </div>
+                        ) : (
+                          <div className="flex aspect-[2/3] items-center justify-center bg-zinc-800">
+                            <span className="text-white/30 text-4xl">
+                              {film.title[0]}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* INFO */}
+                        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-100 translate-y-0 md:translate-y-6 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition duration-300">
+                          <p className="text-sm font-semibold text-white line-clamp-2">
+                            {film.title}
+                          </p>
+
+                          <div className="mt-1 flex items-center justify-between text-xs text-zinc-300">
+                            <span>⭐ {film.average_rating}</span>
+                            <span>{film.total_episodes} eps</span>
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </Link>
-                    <CardHeader>
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <CardTitle className="text-xl">
-                            <Link
-                              className="transition-colors hover:text-red-700"
-                              href={`/films/${film.id}`}
-                            >
-                              {film.title}
-                            </Link>
-                          </CardTitle>
-                          <CardDescription>
-                            Rilis {formatDate(film.release_date)}
-                          </CardDescription>
-                        </div>
-                        <Badge variant="outline">
-                          {formatStatus(film.airing_status)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-                          <p className="text-xs font-medium uppercase text-zinc-500">
-                            Episode
-                          </p>
-                          <p className="mt-1 text-lg font-semibold text-zinc-950">
-                            {film.total_episodes}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-                          <p className="text-xs font-medium uppercase text-zinc-500">
-                            Rating
-                          </p>
-                          <p className="mt-1 text-lg font-semibold text-zinc-950">
-                            {film.average_rating}/10
-                          </p>
-                        </div>
-                      </div>
-                      <Link
-                        className="mt-4 inline-flex text-sm font-medium text-red-700 hover:text-red-800"
-                        href={`/films/${film.id}`}
-                      >
-                        Lihat detail
-                      </Link>
-                    </CardContent>
-                  </Card>
-                ))}
+                  );
+                })}
               </div>
             ) : null}
 

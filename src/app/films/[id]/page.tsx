@@ -26,6 +26,7 @@ import {
 } from "@/hooks/use-user-interactions";
 import Layout from "@/layouts/Layout";
 import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 
 const listStatuses: Array<{ label: string; value: ListStatus }> = [
   { label: "Watching", value: "watching" },
@@ -45,7 +46,6 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-
 export default function FilmDetailPage() {
   const params = useParams<{ id: string }>();
   const film = useFilmDetail(params.id);
@@ -55,7 +55,9 @@ export default function FilmDetailPage() {
   const [rating, setRating] = useState("8");
   const [comment, setComment] = useState("");
   const [reactionIds, setReactionIds] = useState<Record<string, string>>({});
-  const [reactionStatuses, setReactionStatuses] = useState<Record<string, ReactionStatus>>({});
+  const [reactionStatuses, setReactionStatuses] = useState<
+    Record<string, ReactionStatus>
+  >({});
 
   if (film.isLoading) {
     return (
@@ -178,113 +180,97 @@ export default function FilmDetailPage() {
             Kembali ke daftar film
           </Button>
 
-          <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
-            <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="relative min-h-80 bg-zinc-900">
+          <section className="relative overflow-hidden rounded-2xl shadow-xl">
+            {/* BACKGROUND IMAGE */}
+            {heroImage && (
+              <div className="absolute inset-0">
+                <Image
+                  src={resolveImageUrl(heroImage)}
+                  alt={detail.title}
+                  fill
+                  className="object-cover blur-sm scale-110"
+                />
+                <div className="absolute inset-0 bg-black/70" />
+              </div>
+            )}
+
+            {/* CONTENT */}
+            <div className="relative grid lg:grid-cols-[300px_1fr] gap-8 p-6 text-white">
+              {/* POSTER */}
+              <div className="relative w-full aspect-[2/3] overflow-hidden rounded-xl shadow-2xl">
                 {heroImage ? (
-                  <div
-                    aria-label={detail.title}
-                    className="absolute inset-0 bg-cover bg-center"
-                    role="img"
-                    style={{
-                      backgroundImage: `url(${resolveImageUrl(heroImage)})`,
-                    }}
+                  <Image
+                    src={resolveImageUrl(heroImage)}
+                    alt={detail.title}
+                    fill
+                    className="object-cover"
                   />
-                ) : null}
-                <div className="absolute inset-0 bg-black/45" />
-                <div className="relative flex min-h-80 flex-col justify-end p-6 text-white">
-                  <Badge className="mb-4 w-fit" variant="secondary">
-                    {formatStatus(detail.airing_status)}
-                  </Badge>
-                  <h1 className="max-w-3xl text-4xl leading-tight font-semibold tracking-tight text-balance">
-                    {detail.title}
-                  </h1>
-                </div>
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-zinc-800">
+                    <span className="text-4xl text-white/30">
+                      {detail.title[0]}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-5 p-6">
-                <div>
-                  <p className="text-sm font-medium text-emerald-700">
-                    Detail Film
-                  </p>
-                  <h2 className="mt-1 text-2xl font-semibold text-zinc-950">
-                    Informasi
-                  </h2>
+              {/* INFO */}
+              <div className="flex flex-col justify-center space-y-4">
+                <Badge className="w-fit bg-red-500 text-white">
+                  {formatStatus(detail.airing_status)}
+                </Badge>
+
+                <h1 className="text-4xl font-bold leading-tight">
+                  {detail.title}
+                </h1>
+
+                <div className="flex flex-wrap gap-2 text-sm text-zinc-300">
+                  <span>⭐ {detail.average_rating}</span>
+                  <span>•</span>
+                  <span>{detail.total_episodes} eps</span>
+                  <span>•</span>
+                  <span>{formatDate(detail.release_date)}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                    <p className="text-xs font-medium uppercase text-zinc-500">
-                      Episode
-                    </p>
-                    <p className="mt-1 text-xl font-semibold text-zinc-950">
-                      {detail.total_episodes}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                    <p className="text-xs font-medium uppercase text-zinc-500">
-                      Rating
-                    </p>
-                    <p className="mt-1 text-xl font-semibold text-zinc-950">
-                      {detail.average_rating}/10
-                    </p>
-                  </div>
-                </div>
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                  <p className="text-xs font-medium uppercase text-zinc-500">
-                    Tanggal rilis
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-zinc-950">
-                    {formatDate(detail.release_date)}
-                  </p>
-                </div>
+
                 <div className="flex flex-wrap gap-2">
                   {detail.genres.map((genre) => (
-                    <Badge key={genre.id} variant="outline">
+                    <span
+                      key={genre.id}
+                      className="rounded-full bg-white/10 px-3 py-1 text-xs backdrop-blur"
+                    >
                       {genre.name}
-                    </Badge>
+                    </span>
                   ))}
                 </div>
-                {isAuthenticated ? (
+
+                {/* ACTION */}
+                {isAuthenticated && (
                   <form
-                    className="space-y-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4"
                     onSubmit={handleAddToList}
+                    className="flex flex-wrap gap-3 pt-2"
                   >
-                    <div className="space-y-2">
-                      <label
-                        className="text-sm font-medium text-zinc-800"
-                        htmlFor="list-status"
-                      >
-                        Tambahkan ke daftar tontonan
-                      </label>
-                      <select
-                        className="h-8 w-full rounded-lg border border-input bg-white px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                        id="list-status"
-                        onChange={(event) =>
-                          setListStatus(event.target.value as ListStatus)
-                        }
-                        value={listStatus}
-                      >
-                        {listStatuses.map((status) => (
-                          <option key={status.value} value={status.value}>
-                            {status.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <Button
-                      className="w-full"
-                      disabled={interactions.addToFilmList.isPending}
-                      type="submit"
+                    <select
+                      value={listStatus}
+                      onChange={(e) =>
+                        setListStatus(e.target.value as ListStatus)
+                      }
+                      className="rounded-lg bg-white/10 px-3 py-2 text-sm backdrop-blur"
                     >
-                      {interactions.addToFilmList.isPending
-                        ? "Menyimpan..."
-                        : "Tambah ke list"}
+                      {listStatuses.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <Button
+                      type="submit"
+                      disabled={interactions.addToFilmList.isPending}
+                      className="bg-red-500 hover:bg-red-400"
+                    >
+                      + Add to List
                     </Button>
                   </form>
-                ) : (
-                  <p className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">
-                    Login untuk menambahkan film ke daftar tontonan.
-                  </p>
                 )}
               </div>
             </div>
@@ -410,7 +396,11 @@ export default function FilmDetailPage() {
                         }
                         onClick={() => handleReaction(review.id, "like")}
                         size="sm"
-                        variant={reactionStatuses[review.id] === "like" ? "default" : "outline"}
+                        variant={
+                          reactionStatuses[review.id] === "like"
+                            ? "default"
+                            : "outline"
+                        }
                       >
                         👍 Like ({review.likes})
                       </Button>
@@ -421,7 +411,11 @@ export default function FilmDetailPage() {
                         }
                         onClick={() => handleReaction(review.id, "dislike")}
                         size="sm"
-                        variant={reactionStatuses[review.id] === "dislike" ? "default" : "outline"}
+                        variant={
+                          reactionStatuses[review.id] === "dislike"
+                            ? "default"
+                            : "outline"
+                        }
                       >
                         👎 Dislike ({review.dislikes})
                       </Button>
