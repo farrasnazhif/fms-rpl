@@ -76,7 +76,7 @@ export default function ProfilePage() {
           <div className="mx-auto w-full max-w-5xl">
             <section className="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm">
               {/* HEADER */}
-              <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-10 text-white">
+              <div className="bg-gradient-to-r from-red-700 to-red-600 px-6 py-10 text-white">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
                     <div className="flex size-16 items-center justify-center rounded-xl bg-white text-xl font-bold text-emerald-700">
@@ -182,7 +182,7 @@ export default function ProfilePage() {
                           onClick={() => setActiveTab(tab as any)}
                           className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
                             activeTab === tab
-                              ? "bg-emerald-500 text-white"
+                              ? "bg-red-600 text-white"
                               : "hover:bg-zinc-100"
                           }`}
                         >

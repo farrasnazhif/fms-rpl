@@ -78,14 +78,14 @@ export default function Home() {
           <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-8">
             <div className="max-w-3xl space-y-6">
               <div className="inline-flex items-center gap-2">
-                <span className="rounded-full bg-emerald-500/90 px-3 py-2 text-xs font-medium tracking-wide text-white backdrop-blur">
+                <span className="rounded-full bg-red-500/90 px-3 py-2 text-xs font-medium tracking-wide text-white backdrop-blur">
                   FMS - Film Management System
                 </span>
               </div>
 
               <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
                 Kelola Film Lebih
-                <span className="block text-emerald-400">Mudah dan Cepat</span>
+                <span className="block text-red-400">Mudah dan Cepat</span>
               </h1>
 
               <p className="max-w-2xl text-base leading-7 text-zinc-200 sm:text-lg">
@@ -95,7 +95,7 @@ export default function Home() {
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
                 <a
-                  className="rounded-lg bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-400"
+                  className="rounded-lg bg-red-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-red-400"
                   href="#katalog"
                 >
                   Lihat Daftar Film
@@ -115,9 +115,7 @@ export default function Home() {
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
               <div>
-                <p className="text-sm font-medium text-emerald-700">
-                  Katalog Film
-                </p>
+                <p className="text-sm font-medium text-red-700">Katalog Film</p>
                 <h2 className="mt-1 text-3xl font-semibold tracking-tight text-zinc-950">
                   Daftar Film
                 </h2>
@@ -227,7 +225,7 @@ export default function Home() {
               <div className="grid gap-4 md:grid-cols-3">
                 {filteredFilms.map((film) => (
                   <Card
-                    className="overflow-hidden rounded-lg border border-zinc-200 shadow-sm"
+                    className="overflow-hidden rounded-lg shadow-sm"
                     key={film.id}
                   >
                     <Link href={`/films/${film.id}`}>
@@ -252,7 +250,7 @@ export default function Home() {
                         <div>
                           <CardTitle className="text-xl">
                             <Link
-                              className="transition-colors hover:text-emerald-700"
+                              className="transition-colors hover:text-red-700"
                               href={`/films/${film.id}`}
                             >
                               {film.title}
@@ -287,7 +285,7 @@ export default function Home() {
                         </div>
                       </div>
                       <Link
-                        className="mt-4 inline-flex text-sm font-medium text-emerald-700 hover:text-emerald-800"
+                        className="mt-4 inline-flex text-sm font-medium text-red-700 hover:text-red-800"
                         href={`/films/${film.id}`}
                       >
                         Lihat detail
