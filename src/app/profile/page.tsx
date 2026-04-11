@@ -1,21 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  useUserInteractions,
-  VisibilityStatus,
-} from "@/hooks/use-user-interactions";
 import { useUserDetail } from "@/hooks/use-user-detail";
 import Layout from "@/layouts/Layout";
 
@@ -34,10 +24,15 @@ export default function ProfilePage() {
   const router = useRouter();
   const { isAuthenticated, isLoadingUser, logout, user, userError } = useAuth();
   const userDetail = useUserDetail(user?.id);
-  const interactions = useUserInteractions();
+
+  const [activeTab, setActiveTab] = useState<"bio" | "films" | "reviews">(
+    "bio",
+  );
+
   const username = user?.username ?? "Memuat profil";
   const displayName = user?.display_name?.trim() || username;
   const bio = user?.bio?.trim() || "Belum ada bio untuk akun ini.";
+
   const filmLists = userDetail.data?.film_lists ?? [];
   const reviews = userDetail.data?.reviews ?? [];
 
@@ -45,31 +40,6 @@ export default function ProfilePage() {
     logout();
     toast.success("Berhasil logout.");
     router.push("/login");
-  }
-
-  async function handleVisibilityChange(
-    filmListId: string | undefined,
-    visibility: VisibilityStatus,
-  ) {
-    if (!filmListId) {
-      toast.error("ID film list tidak tersedia dari API.");
-      return;
-    }
-
-    try {
-      await interactions.updateFilmListVisibility.mutateAsync({
-        id: filmListId,
-        visibility,
-        userId: user?.id,
-      });
-      toast.success("Visibilitas daftar tontonan berhasil diubah.");
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Visibilitas daftar tontonan gagal diubah.",
-      );
-    }
   }
 
   if (isLoadingUser) {
@@ -84,15 +54,12 @@ export default function ProfilePage() {
 
   return (
     <Layout withNavbar>
-      <main className="min-h-screen bg-zinc-50 px-6 py-24">
+      <main className="min-h-screen bg-zinc-50 px-6 py-20">
         {!isAuthenticated ? (
           <div className="flex items-center justify-center">
             <Card className="w-full max-w-md">
               <CardHeader>
                 <CardTitle>Profil</CardTitle>
-                <CardDescription>
-                  Login diperlukan untuk melihat profil.
-                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button onClick={() => router.push("/login")}>Login</Button>
@@ -106,199 +73,144 @@ export default function ProfilePage() {
             </Card>
           </div>
         ) : (
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-            <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <div>
-                <p className="text-sm font-medium text-emerald-700">
-                  Akun Saya
-                </p>
-                <h1 className="mt-1 text-3xl font-semibold tracking-tight text-zinc-950">
-                  Profil
-                </h1>
-              </div>
-            </header>
-
-            <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
-              <div className="bg-emerald-700 px-6 py-10 text-white">
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mx-auto w-full max-w-5xl">
+            <section className="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm">
+              {/* HEADER */}
+              <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-10 text-white">
+                <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
-                    <div className="flex size-20 shrink-0 items-center justify-center rounded-lg border border-white/30 bg-white text-2xl font-semibold text-emerald-800">
+                    <div className="flex size-16 items-center justify-center rounded-xl bg-white text-xl font-bold text-emerald-700">
                       {getInitials(displayName)}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-emerald-50">
-                        Username
-                      </p>
-                      <h2 className="mt-1 text-3xl font-semibold">
-                        {username}
-                      </h2>
-                      {user?.email ? (
-                        <p className="mt-2 text-sm text-emerald-50">
-                          {user.email}
-                        </p>
-                      ) : null}
+                      <h2 className="text-2xl font-semibold">{displayName}</h2>
+                      <p className="text-sm text-emerald-100">@{username}</p>
+                      {user?.email && (
+                        <p className="text-xs text-emerald-200">{user.email}</p>
+                      )}
                     </div>
                   </div>
-                  {user?.role ? (
-                    <span className="w-fit rounded-lg bg-white px-3 py-1 text-sm font-medium text-emerald-800">
+
+                  {user?.role === "ADMIN" && (
+                    <span className="rounded-lg bg-white px-3 py-1 text-sm font-medium text-emerald-700">
                       {user.role}
                     </span>
-                  ) : null}
+                  )}
                 </div>
               </div>
 
-              <div className="grid lg:grid-cols-[1fr_280px]">
-                <div className="space-y-6 p-6">
-                  {isLoadingUser ? (
-                    <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
-                      Memuat profil...
+              {/* CONTENT */}
+              <div className="grid lg:grid-cols-[1fr_260px]">
+                {/* MAIN */}
+                <div className="p-6 space-y-6">
+                  {userError && (
+                    <p className="text-red-600 text-sm">
+                      Token tidak valid. Silakan login ulang.
                     </p>
-                  ) : null}
-                  {userError ? (
-                    <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                      Token tidak valid atau sesi berakhir. Silakan login ulang.
-                    </p>
-                  ) : null}
-                  {userDetail.error ? (
-                    <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                      Detail film dan review gagal dimuat.
-                    </p>
-                  ) : null}
+                  )}
 
-                  <div>
-                    <h3 className="text-lg font-semibold text-zinc-950">
-                      {displayName}
-                    </h3>
-                    <p className="mt-1 text-sm text-zinc-600">
-                      Informasi profil dari akun yang sedang login.
-                    </p>
-                  </div>
+                  {userDetail.error && (
+                    <p className="text-red-600 text-sm">Gagal memuat data.</p>
+                  )}
 
-                  <article className="rounded-lg border border-zinc-200 bg-zinc-50 p-5">
-                    <p className="text-xs font-medium uppercase text-zinc-500">
-                      Bio
-                    </p>
-                    <p className="mt-3 whitespace-pre-line text-base leading-7 text-zinc-800">
-                      {bio}
-                    </p>
-                  </article>
+                  {/* TAB CONTENT */}
 
-                  <Separator />
-
-                  <section className="space-y-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-zinc-950">
-                        Film List
-                      </h3>
-                      <p className="mt-1 text-sm text-zinc-600">
-                        Daftar film dari detail user.
-                      </p>
+                  {activeTab === "bio" && (
+                    <div className="rounded-xl border bg-zinc-50 p-5">
+                      <p className="text-xs uppercase text-zinc-500">Bio</p>
+                      <p className="mt-2 text-sm text-zinc-700">{bio}</p>
                     </div>
-                    {userDetail.isLoading ? (
-                      <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
-                        Memuat film list...
-                      </p>
-                    ) : null}
-                    {!userDetail.isLoading && filmLists.length === 0 ? (
-                      <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
-                        Belum ada film di list.
-                      </p>
-                    ) : null}
-                    {filmLists.length > 0 ? (
+                  )}
+
+                  {activeTab === "films" && (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold">Film List</h3>
+
+                      {filmLists.length === 0 && (
+                        <p className="text-sm text-zinc-500">Belum ada film.</p>
+                      )}
+
                       <div className="grid gap-3 sm:grid-cols-2">
                         {filmLists.map((film) => (
-                          <article
-                            className="rounded-lg border border-zinc-200 bg-white p-4"
-                            key={`${film.id ?? film.film_title}-${film.list_status}`}
-                          >
-                            <p className="text-base font-semibold text-zinc-950">
-                              {film.film_title}
-                            </p>
-                            <p className="mt-2 w-fit rounded-lg bg-zinc-100 px-2 py-1 text-xs font-medium uppercase text-zinc-600">
+                          <div key={film.id} className="border rounded-xl p-4">
+                            <p className="font-semibold">{film.film_title}</p>
+                            <span className="text-xs text-zinc-500">
                               {film.list_status}
-                            </p>
-                            <div className="mt-4 space-y-2">
-                              <label
-                                className="text-sm font-medium text-zinc-800"
-                                htmlFor={`visibility-${film.id ?? film.film_title}`}
-                              >
-                                Visibilitas
-                              </label>
-                              <select
-                                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                                defaultValue={film.visibility ?? "public"}
-                                disabled={
-                                  interactions.updateFilmListVisibility
-                                    .isPending
-                                }
-                                id={`visibility-${film.id ?? film.film_title}`}
-                                onChange={(event) =>
-                                  handleVisibilityChange(
-                                    film.id,
-                                    event.target.value as VisibilityStatus,
-                                  )
-                                }
-                              >
-                                <option value="public">Public</option>
-                                <option value="private">Private</option>
-                              </select>
-                            </div>
-                          </article>
+                            </span>
+                          </div>
                         ))}
                       </div>
-                    ) : null}
-                  </section>
-
-                  <section className="space-y-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-zinc-950">
-                        Reviews
-                      </h3>
-                      <p className="mt-1 text-sm text-zinc-600">
-                        Ulasan yang pernah dibuat user.
-                      </p>
                     </div>
-                    {userDetail.isLoading ? (
-                      <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
-                        Memuat reviews...
-                      </p>
-                    ) : null}
-                    {!userDetail.isLoading && reviews.length === 0 ? (
-                      <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
-                        Belum ada review.
-                      </p>
-                    ) : null}
-                    {reviews.length > 0 ? (
-                      <div className="space-y-3">
-                        {reviews.map((review) => (
-                          <article
-                            className="rounded-lg border border-zinc-200 bg-white p-4"
-                            key={`${review.film}-${review.rating}-${review.comment}`}
-                          >
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                              <p className="text-base font-semibold text-zinc-950">
-                                {review.film}
-                              </p>
-                              <p className="w-fit rounded-lg bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
-                                Rating {review.rating}/10
-                              </p>
-                            </div>
-                            <p className="mt-3 text-sm leading-6 text-zinc-700">
-                              {review.comment}
-                            </p>
-                          </article>
-                        ))}
-                      </div>
-                    ) : null}
-                  </section>
+                  )}
+
+                  {activeTab === "reviews" && (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold">Reviews</h3>
+
+                      {reviews.length === 0 && (
+                        <p className="text-sm text-zinc-500">
+                          Belum ada review.
+                        </p>
+                      )}
+
+                      {reviews.map((review, i) => (
+                        <div key={i} className="border rounded-xl p-4">
+                          <div className="flex justify-between">
+                            <p className="font-semibold">{review.film}</p>
+                            <span className="text-sm text-emerald-600">
+                              {review.rating}/10
+                            </span>
+                          </div>
+                          <p className="text-sm text-zinc-600 mt-2">
+                            {review.comment}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <aside className="border-t border-zinc-200 bg-zinc-50 p-6 lg:border-t-0 lg:border-l">
-                  <div className="space-y-5">
+                {/* SIDEBAR */}
+                <aside className="border-t lg:border-t-0 lg:border-l bg-zinc-50 p-6">
+                  <div className="space-y-6">
+                    {/* NAVIGATION */}
+                    <div className="bg-white border rounded-xl p-2 space-y-1">
+                      {["bio", "films", "reviews"].map((tab) => (
+                        <button
+                          key={tab}
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          onClick={() => setActiveTab(tab as any)}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
+                            activeTab === tab
+                              ? "bg-emerald-500 text-white"
+                              : "hover:bg-zinc-100"
+                          }`}
+                        >
+                          {tab === "bio"
+                            ? "Bio"
+                            : tab === "films"
+                              ? "Film List"
+                              : "Reviews"}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* STATS */}
+                    <div className="bg-white border rounded-xl p-4 text-sm space-y-2">
+                      <div className="flex justify-between">
+                        <span>Film</span>
+                        <span>{filmLists.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Review</span>
+                        <span>{reviews.length}</span>
+                      </div>
+                    </div>
+
                     <Button
-                      className="w-full"
                       onClick={handleLogout}
                       variant="outline"
+                      className="w-full"
                     >
                       Logout
                     </Button>
