@@ -1,16 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
 
   const [mounted, setMounted] = useState(false);
@@ -19,11 +17,6 @@ export function Navbar() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
-
-  function handleLogout() {
-    logout();
-    router.push("/login");
-  }
 
   if (!mounted) {
     return (
@@ -71,23 +64,13 @@ export function Navbar() {
               className={cn(
                 "rounded-md px-3 py-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-neutral-800/10 hover:text-black",
                 pathname === link.href && "bg-neutral-800/10 text-black",
-                link.label === "Admin" && "text-emerald-700 hover:text-emerald-900",
+                link.label === "Admin" &&
+                  "text-emerald-700 hover:text-emerald-900",
               )}
             >
               {link.label}
             </Link>
           ))}
-
-          {isAuthenticated && (
-            <Button
-              onClick={handleLogout}
-              size="sm"
-              variant="outline"
-              className="ml-2"
-            >
-              Logout
-            </Button>
-          )}
         </div>
       </nav>
     </header>
