@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,17 @@ import {
   useUserInteractions,
 } from "@/hooks/use-user-interactions";
 import Layout from "@/layouts/Layout";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ThumbsDown, ThumbsUp } from "lucide-react";
 import Image from "next/image";
+import { useQueries } from "@tanstack/react-query";
+import { userDetailKeys } from "@/hooks/use-user-detail";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const listStatuses: Array<{ label: string; value: ListStatus }> = [
   { label: "Watching", value: "watching" },
@@ -58,6 +67,34 @@ export default function FilmDetailPage() {
   const [reactionStatuses, setReactionStatuses] = useState<
     Record<string, ReactionStatus>
   >({});
+
+  const userIds = useMemo(() => {
+    if (!film.data) return [];
+    return Array.from(new Set(film.data.reviews.map((r) => r.user_id)));
+  }, [film.data]);
+
+  const usersQuery = useQueries({
+    queries: userIds.map((id) => ({
+      queryKey: userDetailKeys.detail(id),
+      queryFn: () =>
+        fetch(`/api/users/${id}`)
+          .then((res) => res.json())
+          .then((res) => res.data),
+    })),
+  });
+
+  const userMap = useMemo(() => {
+    const map: Record<string, string> = {};
+
+    usersQuery.forEach((q, index) => {
+      const id = userIds[index];
+      if (q.data) {
+        map[id] = q.data.username;
+      }
+    });
+
+    return map;
+  }, [usersQuery, userIds]);
 
   if (film.isLoading) {
     return (
@@ -249,20 +286,24 @@ export default function FilmDetailPage() {
                     onSubmit={handleAddToList}
                     className="flex flex-wrap gap-3 pt-2"
                   >
-                    <select
+                    <Select
                       value={listStatus}
-                      onChange={(e) =>
-                        setListStatus(e.target.value as ListStatus)
+                      onValueChange={(value) =>
+                        setListStatus(value as ListStatus)
                       }
-                      className="rounded-lg bg-white/10 px-3 py-2 text-sm backdrop-blur"
                     >
-                      {listStatuses.map((s) => (
-                        <option key={s.value} value={s.value}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-[180px] bg-white/10 text-white border-white/20 backdrop-blur">
+                        <SelectValue placeholder="Pilih status" />
+                      </SelectTrigger>
 
+                      <SelectContent>
+                        {listStatuses.map((s) => (
+                          <SelectItem key={s.value} value={s.value}>
+                            {s.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Button
                       type="submit"
                       disabled={interactions.addToFilmList.isPending}
@@ -377,7 +418,7 @@ export default function FilmDetailPage() {
                         className="text-xs text-zinc-500 hover:text-emerald-700"
                         href={`/users/${review.user_id}`}
                       >
-                        Pengguna #{review.user_id.slice(0, 8)}
+                        @{userMap[review.user_id] || "Loading..."}
                       </Link>
                     </div>
                     <p className="text-xs text-zinc-500">
@@ -402,7 +443,7 @@ export default function FilmDetailPage() {
                             : "outline"
                         }
                       >
-                        👍 Like ({review.likes})
+                        <ThumbsUp /> Like ({review.likes})
                       </Button>
                       <Button
                         disabled={
@@ -417,7 +458,7 @@ export default function FilmDetailPage() {
                             : "outline"
                         }
                       >
-                        👎 Dislike ({review.dislikes})
+                        <ThumbsDown /> Dislike ({review.dislikes})
                       </Button>
                     </div>
                   ) : null}

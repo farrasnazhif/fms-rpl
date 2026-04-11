@@ -15,6 +15,13 @@ import { useFilms } from "@/hooks/use-films";
 import Layout from "@/layouts/Layout";
 import { resolveImageUrl } from "@/lib/utils";
 import Image from "next/image";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const heroImage =
   "https://images.unsplash.com/photo-1520088258008-0f0a636a00a9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
@@ -137,22 +144,27 @@ export default function Home() {
                 >
                   Status
                 </label>
-                <select
-                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                  id="film-status"
-                  onChange={(event) => {
-                    setStatus(event.target.value);
+                <Select
+                  value={status}
+                  onValueChange={(value) => {
+                    setStatus(value as string);
                     setPage(1);
                   }}
-                  value={status}
                 >
-                  <option value="all">Semua status</option>
-                  {statusOptions.map((item) => (
-                    <option key={item} value={item}>
-                      {formatStatus(item)}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-9 w-full rounded-lg border border-input bg-white text-sm">
+                    <SelectValue placeholder="Pilih status" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="all">Semua status</SelectItem>
+
+                    {statusOptions.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {formatStatus(item)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
