@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,7 +35,6 @@ export default function ProfilePage() {
   const { isAuthenticated, isLoadingUser, logout, user, userError } = useAuth();
   const userDetail = useUserDetail(user?.id);
   const interactions = useUserInteractions();
-  const [visibilityMessage, setVisibilityMessage] = useState("");
   const username = user?.username ?? "Memuat profil";
   const displayName = user?.display_name?.trim() || username;
   const bio = user?.bio?.trim() || "Belum ada bio untuk akun ini.";
@@ -44,6 +43,7 @@ export default function ProfilePage() {
 
   function handleLogout() {
     logout();
+    toast.success("Berhasil logout.");
     router.push("/login");
   }
 
@@ -51,10 +51,8 @@ export default function ProfilePage() {
     filmListId: string | undefined,
     visibility: VisibilityStatus,
   ) {
-    setVisibilityMessage("");
-
     if (!filmListId) {
-      setVisibilityMessage("ID film list tidak tersedia dari API.");
+      toast.error("ID film list tidak tersedia dari API.");
       return;
     }
 
@@ -64,9 +62,9 @@ export default function ProfilePage() {
         visibility,
         userId: user?.id,
       });
-      setVisibilityMessage("Visibilitas daftar tontonan berhasil diubah.");
+      toast.success("Visibilitas daftar tontonan berhasil diubah.");
     } catch (error) {
-      setVisibilityMessage(
+      toast.error(
         error instanceof Error
           ? error.message
           : "Visibilitas daftar tontonan gagal diubah.",
@@ -248,11 +246,6 @@ export default function ProfilePage() {
                           </article>
                         ))}
                       </div>
-                    ) : null}
-                    {visibilityMessage ? (
-                      <p className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700">
-                        {visibilityMessage}
-                      </p>
                     ) : null}
                   </section>
 

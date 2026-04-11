@@ -1,17 +1,86 @@
 "use client";
 
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { useQueries } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { usePublicGenres } from "@/hooks/use-genres";
+import { usePublicGenres, type Genre } from "@/hooks/use-genres";
+import { useFilms, fetchFilmDetail, filmKeys } from "@/hooks/use-films";
 import Layout from "@/layouts/Layout";
+import { resolveImageUrl } from "@/lib/utils";
+
+const TAKE = 50;
+const PAGE_SIZE = 12;
+
+function formatStatus(status: string) {
+  return status.replaceAll("_", " ");
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(value));
+}
 
 export default function GenresPage() {
   const genres = usePublicGenres();
+  const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
+  const [page, setPage] = useState(1);
+
+  // Step 1: fetch the film list (no genre filter — API doesn't support it)
+  const allFilms = useFilms(
+    { take: TAKE, page: 1 },
+    { enabled: Boolean(selectedGenre) },
+  );
+
+  // Step 2: fetch detail for every film in parallel to get their genres
+  const filmDetails = useQueries({
+    queries: (allFilms.data?.data ?? []).map((film) => ({
+      queryKey: filmKeys.detail(film.id),
+      queryFn: () => fetchFilmDetail(film.id),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  // Step 3: filter client-side by the selected genre id
+  const filteredFilms = useMemo(() => {
+    if (!selectedGenre) return [];
+    return filmDetails
+      .filter((q) => q.data != null)
+      .map((q) => q.data!)
+      .filter((film) => film.genres.some((g) => g.id === selectedGenre.id));
+  }, [filmDetails, selectedGenre]);
+
+  const paginatedFilms = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredFilms.slice(start, start + PAGE_SIZE);
+  }, [filteredFilms, page]);
+
+  const totalPages = Math.ceil(filteredFilms.length / PAGE_SIZE);
+
+  const isLoadingFilms = allFilms.isLoading;
+  const isLoadingDetails =
+    !isLoadingFilms && filmDetails.some((q) => q.isLoading);
+  const isLoading = isLoadingFilms || isLoadingDetails;
+
+  function handleSelectGenre(genre: Genre) {
+    if (selectedGenre?.id === genre.id) {
+      setSelectedGenre(null);
+    } else {
+      setSelectedGenre(genre);
+      setPage(1);
+    }
+  }
 
   return (
     <Layout withNavbar>
@@ -23,7 +92,7 @@ export default function GenresPage() {
               Genre Film
             </h1>
             <p className="mt-2 text-sm text-zinc-600">
-              Daftar seluruh kategori genre yang tersedia di FMS.
+              Pilih genre untuk melihat daftar film yang tersedia.
             </p>
           </div>
 
@@ -65,17 +134,192 @@ export default function GenresPage() {
           {genres.data && genres.data.length > 0 ? (
             <div className="rounded-lg border border-zinc-200 bg-white p-6">
               <p className="mb-4 text-sm font-medium text-zinc-500">
-                {genres.data.length} genre tersedia
+                {genres.data.length} genre tersedia — klik untuk memfilter film
               </p>
               <div className="flex flex-wrap gap-2">
                 {genres.data.map((genre) => (
-                  <Badge key={genre.id} variant="outline">
-                    {genre.name}
-                  </Badge>
+                  <button
+                    key={genre.id}
+                    onClick={() => handleSelectGenre(genre)}
+                    type="button"
+                  >
+                    <Badge
+                      className="cursor-pointer transition-colors"
+                      variant={
+                        selectedGenre?.id === genre.id ? "default" : "outline"
+                      }
+                    >
+                      {genre.name}
+                    </Badge>
+                  </button>
                 ))}
               </div>
             </div>
           ) : null}
+
+          {!selectedGenre ? (
+            <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-10 text-center">
+              <p className="text-sm text-zinc-500">
+                Pilih salah satu genre di atas untuk melihat film terkait.
+              </p>
+            </div>
+          ) : (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-emerald-700">
+                    Hasil Filter
+                  </p>
+                  <h2 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-950 capitalize">
+                    Film Genre &ldquo;{selectedGenre.name}&rdquo;
+                  </h2>
+                </div>
+                {!isLoading && (
+                  <p className="text-sm text-zinc-600">
+                    {filteredFilms.length} film ditemukan
+                    {totalPages > 1
+                      ? `, halaman ${page} dari ${totalPages}`
+                      : ""}
+                  </p>
+                )}
+              </div>
+
+              {isLoading ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-zinc-500">
+                    <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-zinc-300 border-t-emerald-600" />
+                    {isLoadingFilms
+                      ? "Memuat daftar film..."
+                      : `Memuat detail film (${filmDetails.filter((q) => !q.isLoading).length}/${filmDetails.length})...`}
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {[1, 2, 3, 4, 5, 6].map((item) => (
+                      <div
+                        className="h-64 animate-pulse rounded-lg border border-zinc-200 bg-white"
+                        key={item}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {!isLoading && filteredFilms.length === 0 ? (
+                <Card className="rounded-lg">
+                  <CardHeader>
+                    <CardTitle>Film tidak ditemukan</CardTitle>
+                    <CardDescription>
+                      Tidak ada film untuk genre &ldquo;{selectedGenre.name}
+                      &rdquo;.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ) : null}
+
+              {!isLoading && paginatedFilms.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {paginatedFilms.map((film) => (
+                    <Card
+                      className="overflow-hidden rounded-lg border border-zinc-200 shadow-sm"
+                      key={film.id}
+                    >
+                      <Link href={`/films/${film.id}`}>
+                        {film.images?.[0] ? (
+                          <img
+                            alt={film.title}
+                            className="h-40 w-full object-cover"
+                            src={resolveImageUrl(film.images[0])}
+                          />
+                        ) : (
+                          <div className="flex h-40 w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
+                            <span className="text-4xl font-bold text-white/20">
+                              {film.title.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </Link>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="text-base leading-snug">
+                            <Link
+                              className="transition-colors hover:text-emerald-700"
+                              href={`/films/${film.id}`}
+                            >
+                              {film.title}
+                            </Link>
+                          </CardTitle>
+                          <Badge className="shrink-0" variant="outline">
+                            {formatStatus(film.airing_status)}
+                          </Badge>
+                        </div>
+                        <CardDescription>
+                          Rilis {formatDate(film.release_date)}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="mb-2 flex flex-wrap gap-1">
+                          {film.genres.map((g) => (
+                            <Badge
+                              className={
+                                g.id === selectedGenre.id
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : ""
+                              }
+                              key={g.id}
+                              variant="outline"
+                            >
+                              {g.name}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2">
+                            <p className="text-xs font-medium uppercase text-zinc-500">
+                              Episode
+                            </p>
+                            <p className="mt-0.5 text-base font-semibold text-zinc-950">
+                              {film.total_episodes}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2">
+                            <p className="text-xs font-medium uppercase text-zinc-500">
+                              Rating
+                            </p>
+                            <p className="mt-0.5 text-base font-semibold text-zinc-950">
+                              {film.average_rating}/10
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : null}
+
+              {!isLoading && totalPages > 1 ? (
+                <div className="flex items-center justify-center gap-3">
+                  <Button
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                    size="sm"
+                    variant="outline"
+                  >
+                    Sebelumnya
+                  </Button>
+                  <span className="text-sm text-zinc-600">
+                    {page} / {totalPages}
+                  </span>
+                  <Button
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                    size="sm"
+                    variant="outline"
+                  >
+                    Selanjutnya
+                  </Button>
+                </div>
+              ) : null}
+            </section>
+          )}
         </div>
       </main>
     </Layout>

@@ -19,6 +19,7 @@ export type Film = {
   total_episodes: number;
   release_date: string;
   average_rating: number;
+  images?: string[];
 };
 
 export type FilmGenre = {
@@ -98,7 +99,7 @@ async function fetchFilms(params: FilmsParams = {}): Promise<FilmsPayload> {
   return response.data;
 }
 
-async function fetchFilmDetail(id: string): Promise<FilmDetail> {
+export async function fetchFilmDetail(id: string): Promise<FilmDetail> {
   const response = await api.get<FilmDetailPayload>(`/films/${id}`);
   const detail = response.data.data;
 
@@ -109,11 +110,12 @@ async function fetchFilmDetail(id: string): Promise<FilmDetail> {
   };
 }
 
-export function useFilms(params?: FilmsParams) {
+export function useFilms(params?: FilmsParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: filmKeys.list(params),
     queryFn: () => fetchFilms(params),
     placeholderData: keepPreviousData,
+    enabled: options?.enabled ?? true,
   });
 }
 

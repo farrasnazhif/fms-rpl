@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,21 +20,20 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
 
     try {
       await login.mutateAsync({ email, password });
+      toast.success("Login berhasil. Selamat datang!");
       router.push("/profile");
     } catch (caughtError) {
-      const message =
+      toast.error(
         caughtError instanceof Error
           ? caughtError.message
-          : "Login gagal. Periksa email dan password.";
-      setError(message);
+          : "Login gagal. Periksa email dan password.",
+      );
     }
   }
 
@@ -74,11 +74,6 @@ export default function LoginPage() {
                 required
               />
             </div>
-            {error ? (
-              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {error}
-              </p>
-            ) : null}
             <Button className="w-full" type="submit" disabled={login.isPending}>
               {login.isPending ? "Memproses..." : "Login"}
             </Button>

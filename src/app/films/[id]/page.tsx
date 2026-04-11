@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,8 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
-import { baseURL } from "@/lib/api";
 import { useFilmDetail } from "@/hooks/use-films";
+import { resolveImageUrl } from "@/lib/utils";
 import {
   ListStatus,
   ReactionStatus,
@@ -44,14 +45,6 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function resolveImageUrl(image: string) {
-  if (image.startsWith("http://") || image.startsWith("https://")) {
-    return image;
-  }
-
-  const apiRoot = baseURL?.replace(/\/api\/v\d+\/?$/, "") ?? "";
-  return `${apiRoot}/storage/${image}`;
-}
 
 export default function FilmDetailPage() {
   const params = useParams<{ id: string }>();
@@ -61,8 +54,8 @@ export default function FilmDetailPage() {
   const [listStatus, setListStatus] = useState<ListStatus>("watching");
   const [rating, setRating] = useState("8");
   const [comment, setComment] = useState("");
-  const [message, setMessage] = useState("");
   const [reactionIds, setReactionIds] = useState<Record<string, string>>({});
+  const [reactionStatuses, setReactionStatuses] = useState<Record<string, ReactionStatus>>({});
 
   if (film.isLoading) {
     return (
@@ -103,16 +96,15 @@ export default function FilmDetailPage() {
 
   async function handleAddToList(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
 
     try {
       await interactions.addToFilmList.mutateAsync({
         film_id: detail.id,
         list_status: listStatus,
       });
-      setMessage("Film berhasil ditambahkan ke daftar tontonan.");
+      toast.success("Film berhasil ditambahkan ke daftar tontonan.");
     } catch (error) {
-      setMessage(
+      toast.error(
         error instanceof Error
           ? error.message
           : "Film gagal ditambahkan ke daftar tontonan.",
@@ -122,7 +114,6 @@ export default function FilmDetailPage() {
 
   async function handleCreateReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
 
     try {
       await interactions.createReview.mutateAsync({
@@ -132,17 +123,15 @@ export default function FilmDetailPage() {
       });
       setComment("");
       setRating("8");
-      setMessage("Review berhasil dikirim.");
+      toast.success("Review berhasil dikirim.");
     } catch (error) {
-      setMessage(
+      toast.error(
         error instanceof Error ? error.message : "Review gagal dikirim.",
       );
     }
   }
 
   async function handleReaction(reviewId: string, status: ReactionStatus) {
-    setMessage("");
-
     try {
       const existingReactionId = reactionIds[reviewId];
 
@@ -166,9 +155,10 @@ export default function FilmDetailPage() {
         }
       }
 
-      setMessage("Reaksi berhasil disimpan.");
+      setReactionStatuses((current) => ({ ...current, [reviewId]: status }));
+      toast.success("Reaksi berhasil disimpan.");
     } catch (error) {
-      setMessage(
+      toast.error(
         error instanceof Error ? error.message : "Reaksi gagal disimpan.",
       );
     }
@@ -392,11 +382,20 @@ export default function FilmDetailPage() {
                   key={review.id}
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm font-medium text-zinc-950">
-                      Rating {review.rating}/10
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-zinc-950">
+                        Rating {review.rating}/10
+                      </p>
+                      <span className="text-zinc-300">·</span>
+                      <Link
+                        className="text-xs text-zinc-500 hover:text-emerald-700"
+                        href={`/users/${review.user_id}`}
+                      >
+                        Pengguna #{review.user_id.slice(0, 8)}
+                      </Link>
+                    </div>
                     <p className="text-xs text-zinc-500">
-                      {review.likes} likes, {review.dislikes} dislikes
+                      {review.likes} likes · {review.dislikes} dislikes
                     </p>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-zinc-700">
@@ -411,9 +410,9 @@ export default function FilmDetailPage() {
                         }
                         onClick={() => handleReaction(review.id, "like")}
                         size="sm"
-                        variant="outline"
+                        variant={reactionStatuses[review.id] === "like" ? "default" : "outline"}
                       >
-                        Like
+                        👍 Like ({review.likes})
                       </Button>
                       <Button
                         disabled={
@@ -422,9 +421,9 @@ export default function FilmDetailPage() {
                         }
                         onClick={() => handleReaction(review.id, "dislike")}
                         size="sm"
-                        variant="outline"
+                        variant={reactionStatuses[review.id] === "dislike" ? "default" : "outline"}
                       >
-                        Dislike
+                        👎 Dislike ({review.dislikes})
                       </Button>
                     </div>
                   ) : null}
@@ -432,12 +431,6 @@ export default function FilmDetailPage() {
               ))}
             </CardContent>
           </Card>
-
-          {message ? (
-            <p className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700">
-              {message}
-            </p>
-          ) : null}
 
           <Separator />
         </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,22 +24,16 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
   async function handleSubmit(event: { preventDefault: () => void }) {
     event.preventDefault();
-    setError("");
-    setSuccess("");
 
-    // validation
     if (password !== confirmPassword) {
-      setError("Password dan konfirmasi password tidak sama.");
+      toast.error("Password dan konfirmasi password tidak sama.");
       return;
     }
 
     if (password.length < 6) {
-      setError("Password minimal 6 karakter.");
+      toast.error("Password minimal 6 karakter.");
       return;
     }
 
@@ -47,15 +42,14 @@ export default function RegisterPage() {
         username,
         email,
         password,
-        display_name: username, // ✅ auto map
-        bio: "", // ✅ default empty
+        display_name: username,
+        bio: "",
       });
 
-      setSuccess("Akun berhasil dibuat. Silakan login.");
+      toast.success("Akun berhasil dibuat. Silakan login.");
       router.push("/login");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Registrasi gagal.";
-      setError(message);
+      toast.error(err instanceof Error ? err.message : "Registrasi gagal.");
     }
   }
 
@@ -103,12 +97,6 @@ export default function RegisterPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
-
-            {/* error */}
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            {/* success */}
-            {success && <p className="text-sm text-emerald-600">{success}</p>}
 
             <Button
               className="w-full"

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,10 +39,8 @@ export default function AdminGenresPage() {
 
   const [page, setPage] = useState(1);
   const [createName, setCreateName] = useState("");
-  const [createMessage, setCreateMessage] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
-  const [editMessage, setEditMessage] = useState("");
 
   const genres = useAdminGenres(page, TAKE);
   const { createGenre, updateGenre } = useGenreMutations();
@@ -50,14 +49,13 @@ export default function AdminGenresPage() {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setCreateMessage("");
 
     try {
       await createGenre.mutateAsync({ name: createName });
       setCreateName("");
-      setCreateMessage("Genre berhasil dibuat.");
+      toast.success("Genre berhasil dibuat.");
     } catch (error) {
-      setCreateMessage(
+      toast.error(
         error instanceof Error ? error.message : "Genre gagal dibuat.",
       );
     }
@@ -66,27 +64,24 @@ export default function AdminGenresPage() {
   function startEdit(id: string, currentName: string) {
     setEditingId(id);
     setEditName(currentName);
-    setEditMessage("");
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditName("");
-    setEditMessage("");
   }
 
   async function handleUpdate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editingId) return;
-    setEditMessage("");
 
     try {
       await updateGenre.mutateAsync({ id: editingId, name: editName });
       setEditingId(null);
       setEditName("");
-      setEditMessage("Genre berhasil diubah.");
+      toast.success("Genre berhasil diubah.");
     } catch (error) {
-      setEditMessage(
+      toast.error(
         error instanceof Error ? error.message : "Genre gagal diubah.",
       );
     }
@@ -141,9 +136,6 @@ export default function AdminGenresPage() {
                   {createGenre.isPending ? "Menyimpan..." : "Tambah"}
                 </Button>
               </form>
-              {createMessage ? (
-                <p className="mt-3 text-sm text-zinc-700">{createMessage}</p>
-              ) : null}
             </CardContent>
           </Card>
 
@@ -184,12 +176,6 @@ export default function AdminGenresPage() {
               genres.data?.data?.length === 0 ? (
                 <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
                   Belum ada genre.
-                </p>
-              ) : null}
-
-              {editMessage ? (
-                <p className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700">
-                  {editMessage}
                 </p>
               ) : null}
 

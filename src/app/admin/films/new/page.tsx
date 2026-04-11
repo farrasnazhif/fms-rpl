@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -53,8 +54,6 @@ export default function AdminNewFilmPage() {
   const [releaseDate, setReleaseDate] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
-  const [message, setMessage] = useState("");
-  const [success, setSuccess] = useState(false);
 
   function handleGenreToggle(id: string) {
     setSelectedGenres((current) =>
@@ -73,16 +72,14 @@ export default function AdminNewFilmPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
-    setSuccess(false);
 
     if (selectedGenres.length === 0) {
-      setMessage("Pilih minimal satu genre.");
+      toast.error("Pilih minimal satu genre.");
       return;
     }
 
     if (!releaseDate) {
-      setMessage("Tanggal rilis wajib diisi.");
+      toast.error("Tanggal rilis wajib diisi.");
       return;
     }
 
@@ -97,8 +94,7 @@ export default function AdminNewFilmPage() {
         images: images.length > 0 ? images : undefined,
       });
 
-      setSuccess(true);
-      setMessage(`Film berhasil ditambahkan. ID: ${result.data.id}`);
+      toast.success(`Film berhasil ditambahkan. ID: ${result.data.id}`);
       setTitle("");
       setSynopsis("");
       setAiringStatus("airing");
@@ -107,7 +103,7 @@ export default function AdminNewFilmPage() {
       setSelectedGenres([]);
       setImages([]);
     } catch (error) {
-      setMessage(
+      toast.error(
         error instanceof Error ? error.message : "Film gagal ditambahkan.",
       );
     }
@@ -296,18 +292,6 @@ export default function AdminNewFilmPage() {
                     </p>
                   ) : null}
                 </div>
-
-                {message ? (
-                  <p
-                    className={`rounded-md border px-3 py-2 text-sm ${
-                      success
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-red-200 bg-red-50 text-red-700"
-                    }`}
-                  >
-                    {message}
-                  </p>
-                ) : null}
 
                 <Button
                   className="w-full"

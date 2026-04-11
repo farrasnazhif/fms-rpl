@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useFilms } from "@/hooks/use-films";
 import Layout from "@/layouts/Layout";
+import { resolveImageUrl } from "@/lib/utils";
 
 const heroImage =
   "https://images.unsplash.com/photo-1520088258008-0f0a636a00a9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
@@ -219,9 +220,24 @@ export default function Home() {
               <div className="grid gap-4 md:grid-cols-2">
                 {filteredFilms.map((film) => (
                   <Card
-                    className="rounded-lg border border-zinc-200 shadow-sm"
+                    className="overflow-hidden rounded-lg border border-zinc-200 shadow-sm"
                     key={film.id}
                   >
+                    <Link href={`/films/${film.id}`}>
+                      {film.images?.[0] ? (
+                        <img
+                          alt={film.title}
+                          className="h-48 w-full object-cover"
+                          src={resolveImageUrl(film.images[0])}
+                        />
+                      ) : (
+                        <div className="flex h-48 w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
+                          <span className="text-5xl font-bold text-white/20">
+                            {film.title.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </Link>
                     <CardHeader>
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
