@@ -9,9 +9,9 @@ export default function Layout({
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    <>
       {withNavbar && <Navbar />}
       {children}
-    </div>
+    </>
   );
 }

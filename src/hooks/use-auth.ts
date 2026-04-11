@@ -53,10 +53,11 @@ type AuthPayload = {
 };
 
 export type RegisterInput = {
-  name: string;
+  username: string;
   email: string;
   password: string;
-  role: UserRole;
+  display_name: string;
+  bio: string;
 };
 
 export type LoginInput = {

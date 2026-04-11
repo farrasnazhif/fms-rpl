@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,6 +19,8 @@ import Layout from "@/layouts/Layout";
 const heroImage =
   "https://images.unsplash.com/photo-1520088258008-0f0a636a00a9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
+const TAKE = 12;
+
 function formatStatus(status: string) {
   return status.replaceAll("_", " ");
 }
@@ -31,29 +34,30 @@ function formatDate(value: string) {
 }
 
 export default function Home() {
-  const films = useFilms();
-  const filmItems = useMemo(() => films.data?.data ?? [], [films.data?.data]);
-  const meta = films.data?.meta?.[0];
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const debouncedSearch = useDebounce(search);
+
+  const films = useFilms({
+    take: TAKE,
+    page,
+    filter: debouncedSearch || undefined,
+    filter_by: debouncedSearch ? "title" : undefined,
+  });
+
+  const filmItems = useMemo(() => films.data?.data ?? [], [films.data?.data]);
+  const meta = films.data?.meta?.[0];
+
   const statusOptions = useMemo(
     () => Array.from(new Set(filmItems.map((film) => film.airing_status))),
     [filmItems],
   );
+
   const filteredFilms = useMemo(() => {
-    const normalizedSearch = debouncedSearch.trim().toLowerCase();
-
-    return filmItems.filter((film) => {
-      const matchesTitle = normalizedSearch
-        ? film.title.toLowerCase().includes(normalizedSearch)
-        : true;
-      const matchesStatus =
-        status === "all" ? true : film.airing_status === status;
-
-      return matchesTitle && matchesStatus;
-    });
-  }, [debouncedSearch, filmItems, status]);
+    if (status === "all") return filmItems;
+    return filmItems.filter((film) => film.airing_status === status);
+  }, [filmItems, status]);
 
   return (
     <Layout withNavbar>
@@ -62,44 +66,44 @@ export default function Home() {
           className="relative flex min-h-[75vh] items-end overflow-hidden px-6 py-16 text-white"
           style={{ backgroundImage: `url(${heroImage})` }}
         >
+          <div className="absolute inset-0 bg-black/50" />
           <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-8">
             <div className="max-w-3xl space-y-6">
-              {/* badge */}
               <div className="inline-flex items-center gap-2">
                 <span className="rounded-full bg-emerald-500/90 px-3 py-2 text-xs font-medium tracking-wide text-white backdrop-blur">
                   FMS - Film Management System
                 </span>
               </div>
 
-              {/* title */}
               <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
                 Kelola Film Lebih
                 <span className="block text-emerald-400">Mudah dan Cepat</span>
               </h1>
 
-              {/* description */}
               <p className="max-w-2xl text-base leading-7 text-zinc-200 sm:text-lg">
                 Pantau seluruh data film dalam satu tempat — mulai dari status
                 tayang, jumlah episode, tanggal rilis, hingga rating pengguna
               </p>
 
-              {/* CTA buttons */}
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                <button className="rounded-lg bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-400">
+                <a
+                  className="rounded-lg bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-400"
+                  href="#katalog"
+                >
                   Lihat Daftar Film
-                </button>
-
-                <button className="rounded-lg border border-white/20 bg-white/10 px-5 py-3 text-sm font-medium text-white backdrop-blur transition hover:bg-white/20">
-                  Tentang Kami
-                </button>
+                </a>
+                <Link
+                  className="rounded-lg border border-white/20 bg-white/10 px-5 py-3 text-sm font-medium text-white backdrop-blur transition hover:bg-white/20"
+                  href="/genres"
+                >
+                  Lihat Genre
+                </Link>
               </div>
             </div>
-
-            {/* bottom fade for smooth transition */}
           </div>
         </section>
 
-        <section className="px-6 py-10">
+        <section className="px-6 py-10" id="katalog">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
               <div>
@@ -128,7 +132,10 @@ export default function Home() {
                 </label>
                 <Input
                   id="film-search"
-                  onChange={(event) => setSearch(event.target.value)}
+                  onChange={(event) => {
+                    setSearch(event.target.value);
+                    setPage(1);
+                  }}
                   placeholder="Cari berdasarkan judul..."
                   value={search}
                 />
@@ -143,7 +150,10 @@ export default function Home() {
                 <select
                   className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   id="film-status"
-                  onChange={(event) => setStatus(event.target.value)}
+                  onChange={(event) => {
+                    setStatus(event.target.value);
+                    setPage(1);
+                  }}
                   value={status}
                 >
                   <option value="all">Semua status</option>
@@ -260,6 +270,30 @@ export default function Home() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            ) : null}
+
+            {meta && meta.total_page > 1 ? (
+              <div className="flex items-center justify-center gap-3">
+                <Button
+                  disabled={page <= 1 || films.isFetching}
+                  onClick={() => setPage((p) => p - 1)}
+                  size="sm"
+                  variant="outline"
+                >
+                  Sebelumnya
+                </Button>
+                <span className="text-sm text-zinc-600">
+                  {page} / {meta.total_page}
+                </span>
+                <Button
+                  disabled={page >= meta.total_page || films.isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                  size="sm"
+                  variant="outline"
+                >
+                  Selanjutnya
+                </Button>
               </div>
             ) : null}
           </div>

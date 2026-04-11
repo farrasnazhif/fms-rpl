@@ -41,9 +41,9 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-6 py-16">
       <Card className="w-full max-w-md rounded-lg border border-zinc-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Masuk</CardTitle>
+          <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
-            Gunakan akun FMS untuk membuka area User atau Admin.
+            Login menggunakan akun yang sudah terdaftar di FMS.
           </CardDescription>
         </CardHeader>
         <CardContent>
