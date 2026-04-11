@@ -54,23 +54,43 @@ export default function ProfilePage() {
 
   return (
     <Layout withNavbar>
-      <main className="min-h-screen bg-zinc-50 px-6 py-20">
+      <main className="min-h-screen bg-zinc-50 px-6 py-20 flex justify-center items-center">
         {!isAuthenticated ? (
-          <div className="flex items-center justify-center">
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle>Profil</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button onClick={() => router.push("/login")}>Login</Button>
-                <Button
-                  variant="outline"
-                  onClick={() => router.push("/register")}
-                >
-                  Register
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="relative flex items-center justify-center">
+            <div className="relative w-full max-w-md">
+              {/* HEADER */}
+              <div className="mb-6 text-center">
+                <h2 className="text-2xl font-semibold text-zinc-900">
+                  Akses Profil
+                </h2>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Login terlebih dahulu untuk melihat dan mengelola akun kamu
+                </p>
+              </div>
+
+              <Card className="rounded-2xl shadow-sm bg-white/90 backdrop-blur ">
+                <CardHeader>
+                  <CardTitle className="text-lg">Belum Login</CardTitle>
+                </CardHeader>
+
+                <CardContent className="space-y-3">
+                  <Button
+                    className="w-full h-11"
+                    onClick={() => router.push("/login")}
+                  >
+                    Login
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full h-11"
+                    onClick={() => router.push("/register")}
+                  >
+                    Register
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         ) : (
           <div className="mx-auto w-full max-w-5xl">
