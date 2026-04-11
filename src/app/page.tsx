@@ -16,6 +16,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useFilms } from "@/hooks/use-films";
 import Layout from "@/layouts/Layout";
 import { resolveImageUrl } from "@/lib/utils";
+import Image from "next/image";
 
 const heroImage =
   "https://images.unsplash.com/photo-1520088258008-0f0a636a00a9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
@@ -27,11 +28,17 @@ function formatStatus(status: string) {
 }
 
 function formatDate(value: string) {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (isNaN(date.getTime())) return "-";
+
   return new Intl.DateTimeFormat("id-ID", {
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export default function Home() {
@@ -217,7 +224,7 @@ export default function Home() {
             ) : null}
 
             {filteredFilms.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 {filteredFilms.map((film) => (
                   <Card
                     className="overflow-hidden rounded-lg border border-zinc-200 shadow-sm"
@@ -225,10 +232,12 @@ export default function Home() {
                   >
                     <Link href={`/films/${film.id}`}>
                       {film.images?.[0] ? (
-                        <img
+                        <Image
                           alt={film.title}
                           className="h-48 w-full object-cover"
                           src={resolveImageUrl(film.images[0])}
+                          width={400}
+                          height={300}
                         />
                       ) : (
                         <div className="flex h-48 w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
