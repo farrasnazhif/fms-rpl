@@ -5,9 +5,18 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth, UserFilmList } from "@/hooks/use-auth";
 import { useUserDetail } from "@/hooks/use-user-detail";
 import Layout from "@/layouts/Layout";
+import { useUserInteractions } from "@/hooks/use-user-interactions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Globe, Lock } from "lucide-react";
 
 function getInitials(value?: string) {
   const source = value?.trim() ? value : "FMS";
@@ -29,6 +38,8 @@ export default function ProfilePage() {
     "bio",
   );
 
+  const { updateFilmListVisibility } = useUserInteractions();
+
   const username = user?.username ?? "Memuat profil";
   const displayName = user?.display_name?.trim() || username;
   const bio = user?.bio?.trim() || "Belum ada bio untuk akun ini.";
@@ -40,6 +51,18 @@ export default function ProfilePage() {
     logout();
     toast.success("Berhasil logout.");
     router.push("/login");
+  }
+
+  async function handleToggleVisibility(film: UserFilmList) {
+    if (!film.id) return;
+
+    const newVisibility = film.visibility === "public" ? "private" : "public";
+
+    updateFilmListVisibility.mutate({
+      id: film.id,
+      visibility: newVisibility,
+      userId: user?.id, // penting untuk refetch
+    });
   }
 
   if (isLoadingUser) {
@@ -151,12 +174,42 @@ export default function ProfilePage() {
                       )}
 
                       <div className="grid gap-3 sm:grid-cols-2">
-                        {filmLists.map((film) => (
-                          <div key={film.id} className="border rounded-xl p-4">
+                        {filmLists.map((film, i) => (
+                          <div
+                            key={film.id || i}
+                            className="border rounded-xl p-4 space-y-2"
+                          >
                             <p className="font-semibold">{film.film_title}</p>
-                            <span className="text-xs text-zinc-500">
-                              {film.list_status}
-                            </span>
+
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-zinc-500">
+                                {film.list_status}
+                              </span>
+
+                              <Select
+                                value={film.visibility}
+                                onValueChange={(value) =>
+                                  handleToggleVisibility({
+                                    ...film,
+                                    visibility: value as string,
+                                  })
+                                }
+                                disabled={updateFilmListVisibility.isPending}
+                              >
+                                <SelectTrigger className="w-[120px] h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                  <SelectItem value="public">
+                                    <Globe /> Public
+                                  </SelectItem>
+                                  <SelectItem value="private">
+                                    <Lock /> Private
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
                         ))}
                       </div>
