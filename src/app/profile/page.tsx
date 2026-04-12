@@ -9,14 +9,6 @@ import { useAuth, UserFilmList } from "@/hooks/use-auth";
 import { useUserDetail } from "@/hooks/use-user-detail";
 import Layout from "@/layouts/Layout";
 import { useUserInteractions } from "@/hooks/use-user-interactions";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Globe, Lock } from "lucide-react";
 
 function getInitials(value?: string) {
   const source = value?.trim() ? value : "FMS";
@@ -194,29 +186,19 @@ export default function ProfilePage() {
                                 {film.list_status}
                               </span>
 
-                              <Select
-                                value={film.visibility}
-                                onValueChange={(value) =>
-                                  handleToggleVisibility({
-                                    ...film,
-                                    visibility: value as string,
-                                  })
-                                }
+                              <button
+                                onClick={() => handleToggleVisibility(film)}
                                 disabled={updateFilmListVisibility.isPending}
+                                className={`text-xs px-2 py-1 rounded ${
+                                  film.visibility === "public"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-zinc-200 text-zinc-600"
+                                }`}
                               >
-                                <SelectTrigger className="w-[120px] h-8 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-
-                                <SelectContent>
-                                  <SelectItem value="public">
-                                    <Globe /> Public
-                                  </SelectItem>
-                                  <SelectItem value="private">
-                                    <Lock /> Private
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
+                                {film.visibility === "public"
+                                  ? "Public"
+                                  : "Private"}
+                              </button>
                             </div>
                           </div>
                         ))}
