@@ -68,7 +68,7 @@ export default function PublicUserProfilePage() {
       <main className="min-h-screen bg-zinc-50 px-6 py-24">
         <div className="mx-auto w-full max-w-4xl space-y-6">
           <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
-            <div className="bg-emerald-700 px-6 py-10 text-white">
+            <div className="bg-gradient-to-r from-red-700 to-red-600 px-6 py-10 text-white">
               <div className="flex items-center gap-4">
                 <div className="flex size-20 shrink-0 items-center justify-center rounded-lg border border-white/30 bg-white text-2xl font-semibold text-emerald-800">
                   {getInitials(displayName)}
@@ -77,9 +77,13 @@ export default function PublicUserProfilePage() {
                   <p className="text-sm font-medium text-emerald-50">
                     Username
                   </p>
-                  <h1 className="mt-1 text-3xl font-semibold">{user.username}</h1>
+                  <h1 className="mt-1 text-3xl font-semibold">
+                    {user.username}
+                  </h1>
                   {displayName !== user.username ? (
-                    <p className="mt-1 text-sm text-emerald-100">{displayName}</p>
+                    <p className="mt-1 text-sm text-emerald-100">
+                      {displayName}
+                    </p>
                   ) : null}
                 </div>
               </div>
@@ -99,9 +103,7 @@ export default function PublicUserProfilePage() {
 
           <section className="space-y-3">
             <div>
-              <h2 className="text-lg font-semibold text-zinc-950">
-                Film List
-              </h2>
+              <h2 className="text-lg font-semibold text-zinc-950">Film List</h2>
               <p className="mt-1 text-sm text-zinc-600">
                 Daftar tontonan publik dari pengguna ini.
               </p>

@@ -224,8 +224,9 @@ export default function FilmDetailPage() {
                 <Image
                   src={resolveImageUrl(heroImage)}
                   alt={detail.title}
-                  fill
-                  className="object-cover blur-sm scale-110"
+                  width={1000}
+                  height={600}
+                  className="object-cover blur-sm scale-110 w-full h-full"
                 />
                 <div className="absolute inset-0 bg-black/70" />
               </div>
@@ -239,8 +240,9 @@ export default function FilmDetailPage() {
                   <Image
                     src={resolveImageUrl(heroImage)}
                     alt={detail.title}
-                    fill
-                    className="object-cover"
+                    width={200}
+                    height={300}
+                    className="object-cover w-full h-full"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-zinc-800">
