@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { isAuthenticated, isLoadingUser, logout, user, userError } = useAuth();
   const userDetail = useUserDetail(user?.id);
+  const [mounted, setMounted] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"bio" | "films" | "reviews">(
     "bio",
@@ -46,6 +47,13 @@ export default function ProfilePage() {
 
   const filmLists = userDetail.data?.film_lists ?? [];
   const reviews = userDetail.data?.reviews ?? [];
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   function handleLogout() {
     logout();
