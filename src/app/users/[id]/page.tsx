@@ -114,10 +114,10 @@ export default function PublicUserProfilePage() {
               </p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
-                {publicFilmLists.map((film) => (
+                {publicFilmLists.map((film, i) => (
                   <article
                     className="rounded-lg border border-zinc-200 bg-white p-4"
-                    key={`${film.film_title}-${film.list_status}`}
+                    key={`${film.film_title}-${film.list_status}-${i}`}
                   >
                     <p className="text-base font-semibold text-zinc-950">
                       {film.film_title}
