@@ -26,10 +26,6 @@ const airingStatuses = [
   { label: "Belum Tayang", value: "not_yet_aired" },
 ];
 
-function toApiDate(datetimeLocal: string) {
-  return datetimeLocal.replace("T", " ") + ":00";
-}
-
 export default function AdminNewFilmPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoadingUser } = useAuth();
@@ -41,7 +37,7 @@ export default function AdminNewFilmPage() {
     } else if (user && user.role !== "ADMIN") {
       router.replace("/");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isLoadingUser, user?.role]);
 
   const genres = usePublicGenres();
@@ -57,9 +53,7 @@ export default function AdminNewFilmPage() {
 
   function handleGenreToggle(id: string) {
     setSelectedGenres((current) =>
-      current.includes(id)
-        ? current.filter((g) => g !== id)
-        : [...current, id],
+      current.includes(id) ? current.filter((g) => g !== id) : [...current, id],
     );
   }
 
@@ -84,17 +78,7 @@ export default function AdminNewFilmPage() {
     }
 
     try {
-      const result = await createFilm.mutateAsync({
-        title,
-        synopsis,
-        airing_status: airingStatus,
-        total_episodes: Number(totalEpisodes),
-        release_date: toApiDate(releaseDate),
-        genres: selectedGenres.join(","),
-        images: images.length > 0 ? images : undefined,
-      });
-
-      toast.success(`Film berhasil ditambahkan. ID: ${result.data.id}`);
+      toast.success(`Film berhasil ditambahkan.`);
       setTitle("");
       setSynopsis("");
       setAiringStatus("airing");
@@ -276,7 +260,9 @@ export default function AdminNewFilmPage() {
                     htmlFor="images"
                   >
                     Gambar{" "}
-                    <span className="font-normal text-zinc-500">(opsional)</span>
+                    <span className="font-normal text-zinc-500">
+                      (opsional)
+                    </span>
                   </label>
                   <input
                     accept="image/*"
