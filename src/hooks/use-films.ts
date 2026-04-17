@@ -84,7 +84,7 @@ export const filmKeys = {
 
 async function fetchFilms(params: FilmsParams = {}): Promise<FilmsPayload> {
   const searchParams = new URLSearchParams({
-    take: String(params.take ?? 12),
+    take: String(params.take ?? 10),
     page: String(params.page ?? 1),
   });
 
@@ -110,7 +110,10 @@ export async function fetchFilmDetail(id: string): Promise<FilmDetail> {
   };
 }
 
-export function useFilms(params?: FilmsParams, options?: { enabled?: boolean }) {
+export function useFilms(
+  params?: FilmsParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: filmKeys.list(params),
     queryFn: () => fetchFilms(params),
