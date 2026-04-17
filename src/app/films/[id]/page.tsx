@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import api from "@/lib/api";
 
 const listStatuses: Array<{ label: string; value: ListStatus }> = [
   { label: "Watching", value: "watching" },
@@ -76,10 +77,10 @@ export default function FilmDetailPage() {
   const usersQuery = useQueries({
     queries: userIds.map((id) => ({
       queryKey: userDetailKeys.detail(id),
-      queryFn: () =>
-        fetch(`/api/users/${id}`)
-          .then((res) => res.json())
-          .then((res) => res.data),
+      queryFn: async () => {
+        const res = await api.get(`/users/${id}`);
+        return res.data.data;
+      },
     })),
   });
 
