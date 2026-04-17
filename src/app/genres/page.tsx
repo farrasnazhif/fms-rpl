@@ -17,7 +17,7 @@ import Layout from "@/layouts/Layout";
 import { resolveImageUrl } from "@/lib/utils";
 import Image from "next/image";
 
-const TAKE = 50;
+const TAKE = 10;
 const PAGE_SIZE = 12;
 
 export default function GenresPage() {

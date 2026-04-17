@@ -26,7 +26,7 @@ import {
 const heroImage =
   "https://images.unsplash.com/photo-1520088258008-0f0a636a00a9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
-const TAKE = 12;
+const TAKE = 10;
 
 function formatStatus(status: string) {
   return status.replaceAll("_", " ");
