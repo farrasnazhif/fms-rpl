@@ -26,6 +26,10 @@ const airingStatuses = [
   { label: "Belum Tayang", value: "not_yet_aired" },
 ];
 
+function toApiDate(datetimeLocal: string) {
+  return datetimeLocal.replace("T", " ") + ":00";
+}
+
 export default function AdminNewFilmPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoadingUser } = useAuth();
@@ -78,6 +82,16 @@ export default function AdminNewFilmPage() {
     }
 
     try {
+      await createFilm.mutateAsync({
+        title,
+        synopsis,
+        airing_status: airingStatus,
+        total_episodes: Number(totalEpisodes),
+        release_date: toApiDate(releaseDate),
+        genres: selectedGenres.join(","),
+        images: images.length > 0 ? images : undefined,
+      });
+
       toast.success(`Film berhasil ditambahkan.`);
       setTitle("");
       setSynopsis("");
